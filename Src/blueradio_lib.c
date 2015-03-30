@@ -4,6 +4,8 @@
 
 #include "blueradio_fh_lib.h"
 
+BLR_buff_TypeDef blr_buffers ;
+
 
 /** Contain possible response or event strings
 *		Index  in this table is the same as index in the table pointers to functions,
@@ -23,23 +25,30 @@ static const char blrsp_tab[BLR_REPS_CNT][BLR_REP_NAME_LEN] = {
 	"RN" , "RS", "UC_REQ" , "PIN_REQ", "SPP"
 } ;
 
-/*
-static int_fast8_t (* const bl_fh_tab[BLR_REPS_CNT ])( const char * ) = {
-	/ * handling: common responses * /
-	bl_fh_OK , bl_fh_ERROR,
-	/ * handling: general events * /
-	bl_fh_DONE, bl_fh_CONNECT, bl_fh_DISCONNECT, bl_fh_DISCOVERY, bl_fh_PAIR_REQ, bl_fh_PAIRED, bl_fh_PAIR_FAIL,
-	bl_fh_PK_REQ, bl_fh_PK_DIS, 
-	/ * handling: bluetooth LE events: * /
-	bl_fh_SCCPS, bl_fh_CPU, bl_fh_GATT_DONE, bl_fh_GATT_DPS, bl_fh_GATT_DC, bl_fh_GATT_DCD,
-	bl_fh_GATT_VAL, bl_fh_BRSP,
-	/ * handling: classic bluetooth events: * /
-	bl_fh_RN, bl_fh_RS, bl_UC_REQ, bl_fh_PIN_REQ, bl_fh_SPP
-} ;
+
+
+/**	Init bluetooth buffer structure 
+*
+*		@param buff pointer to 2-dimensional char array which will contain AT response/event data
+*		@param no number of buffers should be the same as BLR_STRUCT_BUFF_NO macro 
+*		@param size how many elements are in each buffer - should be the same as BLR_STRUCT_BUFF_SIZE macro 
 */
+void bl_init_buffers( char * buff_tab, uint_fast8_t no, size_t size ) {
+	
+	size_t i ;
+	for ( i = 0 ; i < no ; ++ i ) 
+		blr_buffers.buff[i] = &buff_tab[i * size] ;	// Copy buffers pointers
+	
+	blr_buffers.ix_buff = 0 ;
+	//init semafor:
+	blr_buffers.semafor = 1 ;
+}
 
 
 
+/**
+*
+*/
 int_fast8_t bl_handleResp( BL_Data_TypeDef * _hBL, const char * src ) {
 	
 	static char _name[BLR_REP_NAME_LEN] ;
@@ -59,11 +68,12 @@ int_fast8_t bl_handleResp( BL_Data_TypeDef * _hBL, const char * src ) {
 	
 	
 	// Got index, so call proper handle functions for that response/event from bluetooth
-	ret = bl_fh_run( _hBL, ret, &_resttxt[0] ) ;
+	bl_fh_run( _hBL, ret, &_resttxt[0] ) ;
+	
 	
 	/* to do error handler */
 	
-	return ret ;
+	return 0 ;
 }
 
 
@@ -77,7 +87,7 @@ int_fast8_t bl_handleResp( BL_Data_TypeDef * _hBL, const char * src ) {
 *		@param name pointer to char table which will contain response/event name, '\0' terminated. 
 *		Size of that table musnt not be smaller than BLR_REP_NAME_LEN macro says
 *		@param resttxt pointer to char table which will contain rest of RAW string that has been just received from BL
-*		without at the beginign: 0x0D 0x0A response/event name ande ',' character, and at the end instead of 0x0D 0x0A
+*		without at the beginign: 0x0D 0x0A response/event name and ',' character, and at the end instead of 0x0D and 0x0A
 *		will be placed '\0' character. 
 *		@return -2 Error. At least one of passed pointer points to NULL
 *		@return >=1 size of valid data that were copied to 'name' - includes \0 char

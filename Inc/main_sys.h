@@ -6,6 +6,11 @@
 
 #include "stm32f4xx_hal.h"
 
+// For debugging only
+	 #include <stdio.h>
+	 #define PRINTF(_txt_, _d_) printf("\n%s : %d\n", (_txt_), (_d_))
+
+	 
 	 
 typedef struct sens_param_typedef {
 	uint_fast8_t temp_tot ;				/// Total part of the temperature
@@ -50,10 +55,34 @@ typedef struct bluetooth_connection_typedef {
 } blueConn_TypeDef ;
 
 
-typedef enum bl_hf_error_code { GATT_DONE_ERR /* to do */ } hf_err_TypeDef ;
+typedef enum bl_hf_error_code { 
+	/* START BLUETOOTH AT - ERROR CODE
+		 these enums values must start at 1 and end at 12 - as in the documentation */
+	BLR_INVALID_PARAMS=1,
+	BLR_INVALID_ROLE=2,
+	BLR_INVALID_STATE=3,
+	BLR_INVALID_PASSWD=4,
+	BLR_INVALID_CONN_HANDLE=5,
+	BLR_CONF_LOCKED=6,
+	BLR_LIST_ERROR=7,
+	BLR_HARDWARE_ERROR=8,
+	BLR_NO_ADDR_STORED=9,
+	BLR_BLUETOOTH_ERROR=10,
+	BLR_MEM_ALLOC_ERROR=11,
+	BLR_GATT_REQ_PENDING=12,
+	/* STOP BLUETOOTH AT - ERROR CODE */
+	
+	/*  to do */
+	GATT_DONE_ERR
+} hf_err_TypeDef ;
+
+
 typedef enum bl_hf_status { 
-	BL_NOACT, 
-	BL_ERR, 
+	BL_NOACTION, 
+	BL_RESPONSE_OK,
+	BL_RESPONSE_ERR,
+
+	LIB_HF_ERR,						// this is library internal error - is set if it occur in one of bl_hf_xxxx() functions
 	BL_VAL_CHANGED,
 	BL_VAL_READ
 	/* to do */

@@ -8,6 +8,7 @@
 
 #include "mpl3115_lib.h"
 #include "main_sys.h"
+#include "blueradio_lib.h"
 
 
 /* Private function prototypes -----------------------------------------------*/
@@ -17,8 +18,13 @@ int32_t bl_read_cmd( char * string, const size_t max_size ) ;
 void delay_ms( const uint32_t delay );
 
 
+
 extern UART_HandleTypeDef huart5;
 extern I2C_HandleTypeDef hi2c3;
+extern BLR_buff_TypeDef blr_buffers ;		//For bluetooth UART data handle 
+
+char bl_buff[BLR_STRUCT_BUFF_NO][BLR_STRUCT_BUFF_SIZE] ;	// buffers for Bluetooth UART data
+
 
 
 
@@ -41,6 +47,10 @@ int main(void)
   /* Configure the system clock */
   SystemClock_Config();
 
+	
+	// Init bluetooth UART buffers structure
+	bl_init_buffers( bl_buff[0], BLR_STRUCT_BUFF_NO, BLR_STRUCT_BUFF_SIZE) ;
+	
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_UART5_Init();
