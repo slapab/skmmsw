@@ -21,11 +21,13 @@ void delay_ms( const uint32_t delay );
 
 extern UART_HandleTypeDef huart5;
 extern I2C_HandleTypeDef hi2c3;
-extern BLR_buff_TypeDef blr_buffers ;		//For bluetooth UART data handle 
+extern BLR_buff_TypeDef blr_buffers ;		//Bluetooth UART buffers stearing handle 
 
-char bl_buff[BLR_STRUCT_BUFF_NO][BLR_STRUCT_BUFF_SIZE] ;	// buffers for Bluetooth UART data
+// buffers for Bluetooth UART data
+char bl_buff[BLR_STRUCT_BUFF_NO][BLR_STRUCT_BUFF_SIZE] ;	
 
-
+// SENSORS AND BLUETOOTH DATA
+BL_Data_TypeDef weather_data ;
 
 
 	int a = 0 ;
@@ -49,24 +51,30 @@ int main(void)
 
 	
 	// Init bluetooth UART buffers structure
-	bl_init_buffers( bl_buff[0], BLR_STRUCT_BUFF_NO, BLR_STRUCT_BUFF_SIZE) ;
+	bl_init_buffers( &blr_buffers, bl_buff[0], BLR_STRUCT_BUFF_NO, BLR_STRUCT_BUFF_SIZE) ;
 	
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_UART5_Init();
 	MX_I2C_Init();
 
+	// Let know UART callbackcplt function whch buffer was reserved
+	blr_buffers.ix_buff[0] = 200+1+0;	// 1 is the standard offset, 0 is the index of buffer which is reserved
+	HAL_UART_Receive_IT(&huart5, (uint8_t*)blr_buffers.buff[0], BLR_STRUCT_BUFF_SIZE );
 	
+	//sem_dec( &blr_buffers.semaphore ) ;
 	
 	// Send char over 'semihosting' - initialization( without it, sometimes first character is missing )
 	printf( " START \n\n" ) ;
 
+	//sem_inc( &blr_buffers.semaphore ) ;
+	
 	const size_t user_cmd_size = 80 ;
 	char user_cmd[user_cmd_size] ;
 	size_t rcv_cmd_size ;
 	
 	// Enable interrupt for UART TX empty
-	__HAL_UART_ENABLE_IT(&huart5, UART_IT_RXNE); 
+	//__HAL_UART_ENABLE_IT(&huart5, UART_IT_RXNE); 
 	
 	
 	// Disable Dual mode
@@ -78,7 +86,7 @@ int main(void)
 	size_string = 5 ;
 	usart_sendString( send_string, size_string ) ;
 	
-	delay_ms(500) ;
+	//delay_ms(500) ;
 	
 	// Set advertising payload to iBeacon format: 
 	// iBeacon prefix is: 02 01 06 1A FF 4C 00 02 15
@@ -87,6 +95,7 @@ int main(void)
 	// set major: 00 0F
 	// set minor: 00 03
 	// set proximity, at start set: C5
+	/*
 	const char *src_advr_data = "ATSDSDLE,0,1AFF4C0002150112233445566778899AABBCCDDEEFF0000F0003C5" ;
 	strcpy( &user_cmd[0], &src_advr_data[0]) ;
 	user_cmd[65] = 0x0D ;
@@ -102,7 +111,7 @@ int main(void)
 	size_string = 14 ;
 	usart_sendString( user_cmd, size_string ) ;
 	
-	
+	*/
 	// try nRF UART service ( nordic CID: 0x0059 )
 	// not working: 
 	/*
@@ -113,7 +122,7 @@ int main(void)
 	size_string = 54 ;
 	usart_sendString( user_cmd, size_string ) ;
 	*/
-	
+	/*
 	delay_ms(500) ;
 	
 	// enable advertising: 
@@ -125,14 +134,17 @@ int main(void)
 	
 	
 	delay_ms(500) ;
-	
+	*/
 	
 	
 	//HAL_I2C_Mem_Read_IT(&hi2c3, 0xC0, 0x00, I2C_MEMADD_SIZE_8BIT, &i2c_rcv_data[0], 4 ) ;
 	
-	delay_ms(500) ;
+	//delay_ms(500) ;
   while (1)
   {
+		
+		bl_checkEvents( &blr_buffers, &weather_data ) ;
+		
 		if ( a == 1) {
 			a = 0;
 			

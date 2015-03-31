@@ -35,9 +35,11 @@ void SysTick_Handler(void)
 void UART5_IRQHandler(void)
 {
 	
-  HAL_UART_IRQHandler(&huart5); 
+  //HAL_UART_IRQHandler(&huart5); 
+	HAL_UART_IRQHandler_mod(&huart5); 
+	
 	// Obsluzyc odebrane dane
-	usart_readCharacter(&huart5, huart5.Instance->DR) ;
+	// usart_readCharacter(&huart5, huart5.Instance->DR) ;
 }
 
 

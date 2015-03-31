@@ -129,14 +129,164 @@ void usart_readCharacter( const UART_HandleTypeDef * handler, const char data ) 
 }
 
 
-/* USER CODE END 1 */
 
 /**
-  * @}
+  * @brief  This function handles UART interrupt request.
+  * @param  huart: pointer to a UART_HandleTypeDef structure that contains
+  *                the configuration information for the specified UART module.
+  * @retval None
   */
+void HAL_UART_IRQHandler_mod(UART_HandleTypeDef *huart)
+{
+  uint32_t tmp1 = 0, tmp2 = 0;
+
+  tmp1 = __HAL_UART_GET_FLAG(huart, UART_FLAG_PE);
+  tmp2 = __HAL_UART_GET_IT_SOURCE(huart, UART_IT_PE);  
+  /* UART parity error interrupt occurred ------------------------------------*/
+  if((tmp1 != RESET) && (tmp2 != RESET))
+  { 
+    __HAL_UART_CLEAR_PEFLAG(huart);
+    
+    huart->ErrorCode |= HAL_UART_ERROR_PE;
+  }
+  
+  tmp1 = __HAL_UART_GET_FLAG(huart, UART_FLAG_FE);
+  tmp2 = __HAL_UART_GET_IT_SOURCE(huart, UART_IT_ERR);
+  /* UART frame error interrupt occurred -------------------------------------*/
+  if((tmp1 != RESET) && (tmp2 != RESET))
+  { 
+    __HAL_UART_CLEAR_FEFLAG(huart);
+    
+    huart->ErrorCode |= HAL_UART_ERROR_FE;
+  }
+  
+  tmp1 = __HAL_UART_GET_FLAG(huart, UART_FLAG_NE);
+  tmp2 = __HAL_UART_GET_IT_SOURCE(huart, UART_IT_ERR);
+  /* UART noise error interrupt occurred -------------------------------------*/
+  if((tmp1 != RESET) && (tmp2 != RESET))
+  { 
+    __HAL_UART_CLEAR_NEFLAG(huart);
+    
+    huart->ErrorCode |= HAL_UART_ERROR_NE;
+  }
+  
+  tmp1 = __HAL_UART_GET_FLAG(huart, UART_FLAG_ORE);
+  tmp2 = __HAL_UART_GET_IT_SOURCE(huart, UART_IT_ERR);
+  /* UART Over-Run interrupt occurred ----------------------------------------*/
+  if((tmp1 != RESET) && (tmp2 != RESET))
+  { 
+    __HAL_UART_CLEAR_OREFLAG(huart);
+    
+    huart->ErrorCode |= HAL_UART_ERROR_ORE;
+  }
+  
+  tmp1 = __HAL_UART_GET_FLAG(huart, UART_FLAG_RXNE);
+  tmp2 = __HAL_UART_GET_IT_SOURCE(huart, UART_IT_RXNE);
+  /* UART in mode Receiver ---------------------------------------------------*/
+  if((tmp1 != RESET) && (tmp2 != RESET))
+  { 
+    UART_Receive_IT_mod(huart);
+  }
+  
+  tmp1 = __HAL_UART_GET_FLAG(huart, UART_FLAG_TXE);
+  tmp2 = __HAL_UART_GET_IT_SOURCE(huart, UART_IT_TXE);
+  /* UART in mode Transmitter ------------------------------------------------*/
+  if((tmp1 != RESET) && (tmp2 != RESET))
+  {
+    UART_Transmit_IT(huart);
+  }
+  
+  if(huart->ErrorCode != HAL_UART_ERROR_NONE)
+  {
+    /* Set the UART state ready to be able to start again the process */
+    huart->State = HAL_UART_STATE_READY;
+    
+    HAL_UART_ErrorCallback(huart);
+  }  
+}
+
+
 
 /**
-  * @}
+  * @brief  Receives an amount of data in non blocking mode 
+  * @param  huart: pointer to a UART_HandleTypeDef structure that contains
+  *                the configuration information for the specified UART module.
+  * @retval HAL status
   */
+static HAL_StatusTypeDef UART_Receive_IT_mod(UART_HandleTypeDef *huart)
+{
+  uint16_t* tmp;
+  uint32_t tmp1 = 0;
+  
+  tmp1 = huart->State; 
+  if((tmp1 == HAL_UART_STATE_BUSY_RX) || (tmp1 == HAL_UART_STATE_BUSY_TX_RX))
+  {
+    if(huart->Init.WordLength == UART_WORDLENGTH_9B)
+    {
+      tmp = (uint16_t*) huart->pRxBuffPtr;
+      if(huart->Init.Parity == UART_PARITY_NONE)
+      {
+        *tmp = (uint16_t)(huart->Instance->DR & (uint16_t)0x01FF);
+        huart->pRxBuffPtr += 2;
+      }
+      else
+      {
+        *tmp = (uint16_t)(huart->Instance->DR & (uint16_t)0x00FF);
+        huart->pRxBuffPtr += 1;
+      }
+    }
+    else
+    {
+      if(huart->Init.Parity == UART_PARITY_NONE)
+      {
+        *huart->pRxBuffPtr++ = (uint8_t)(huart->Instance->DR & (uint8_t)0x00FF);
+      }
+      else
+      {
+        *huart->pRxBuffPtr++ = (uint8_t)(huart->Instance->DR & (uint8_t)0x007F);
+      }
+    }
 
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+		// MODYFICATION HERE in IF statement
+    if( (--huart->RxXferCount == 0) || 
+				( 
+					( (huart->RxXferSize - huart->RxXferCount) > 2 ) &&
+					( *(huart->pRxBuffPtr-2) == 0x0D) && (*(huart->pRxBuffPtr-1) == 0x0A )	
+				) 
+			)
+    {
+			
+			// MOD HERE - must to add 0x0D and 0x0A event it will corrupt data in buffer
+			if ( huart->RxXferCount == 0 ) {
+				*(huart->pRxBuffPtr-1) = 0x0A ;
+				*(huart->pRxBuffPtr-2) = 0x0D ;
+			}		
+			
+      __HAL_UART_DISABLE_IT(huart, UART_IT_RXNE);
+
+      /* Check if a transmit process is ongoing or not */
+      if(huart->State == HAL_UART_STATE_BUSY_TX_RX) 
+      {
+        huart->State = HAL_UART_STATE_BUSY_TX;
+      }
+      else
+      {
+        /* Disable the UART Parity Error Interrupt */
+        __HAL_UART_DISABLE_IT(huart, UART_IT_PE);
+
+        /* Disable the UART Error Interrupt: (Frame error, noise error, overrun error) */
+        __HAL_UART_DISABLE_IT(huart, UART_IT_ERR);
+
+        huart->State = HAL_UART_STATE_READY;
+      }
+      HAL_UART_RxCpltCallback(huart);
+
+      return HAL_OK;
+    }
+    return HAL_OK;
+  }
+  else
+  {
+    return HAL_BUSY; 
+  }
+}

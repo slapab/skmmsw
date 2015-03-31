@@ -1,5 +1,4 @@
 #include "blueradio_lib.h"
-#include "stdbool.h"
 #include "stddef.h"
 
 #include "blueradio_fh_lib.h"
@@ -33,15 +32,136 @@ static const char blrsp_tab[BLR_REPS_CNT][BLR_REP_NAME_LEN] = {
 *		@param no number of buffers should be the same as BLR_STRUCT_BUFF_NO macro 
 *		@param size how many elements are in each buffer - should be the same as BLR_STRUCT_BUFF_SIZE macro 
 */
-void bl_init_buffers( char * buff_tab, uint_fast8_t no, size_t size ) {
+void bl_init_buffers( BLR_buff_TypeDef * hBL, char * buff_tab, uint_fast8_t no, size_t size ) {
 	
 	size_t i ;
-	for ( i = 0 ; i < no ; ++ i ) 
-		blr_buffers.buff[i] = &buff_tab[i * size] ;	// Copy buffers pointers
+	for ( i = 0 ; i < no ; ++ i ) {
+		hBL->buff[i] = &buff_tab[i * size] ;	// Copy buffers pointers
+		hBL->ix_buff[i] = 200 ;								// Set all buffers as free to use
+	}
 	
-	blr_buffers.ix_buff = 0 ;
-	//init semafor:
-	blr_buffers.semafor = 1 ;
+	hBL->int_wait = 0 ;
+	//Init semafor as free - ready to down
+	hBL->semaphore = 1 ;
+}
+
+
+/**
+*		
+*	 	@warning macro: BLR_STRUCT_BUFF_NO must have the same value as number of used buffers for storing UART data
+*/
+void bl_checkEvents( BLR_buff_TypeDef * hBL, void * fh_param ) {
+	size_t i, j;
+	int32_t an = -1 ;
+
+
+	
+	if ( hBL->semaphore != 0 ) {
+	// Semaphore down
+	//sem_dec(&hBL->semaphore) ;
+		hBL->semaphore = 0 ;
+		
+		
+		for ( j = 0 ; j < 2 ; ++j ) {
+			for ( i = 0 ; i < (BLR_STRUCT_BUFF_NO-1) ; ++i ) {
+
+				/* OLD
+				// ix_buff[i] is the current
+				// ix_buff[i+1] is the next
+				// possibly anomaly is detected when 'current' is >=200, and 'next' < 200. Must be found
+				// any values <200 after that anomaly.
+				*/
+				if ( j == 0 ) {
+					if ( ( hBL->ix_buff[i] >= 200 ) && (hBL->ix_buff[i+1] < 200) ) {
+						an = i+1 ;
+						continue ;
+					} // find the last position of anomaly
+				}	// if j == 0
+				else {
+
+					if ( an != -1 ) {
+						break ;
+					}	// If anomaly was detected
+					else if ( hBL->ix_buff[i] < 200 ){
+						an = i ;
+						break ;
+					} // No anomaly. Find the first full buffer
+				}	// if j == 1
+			}
+		}
+		
+		// semaphore up!
+		// sem_inc( &hBL->semaphore );
+		hBL->semaphore = 1 ;
+		
+		// Check if UART RX callbackcplt is waiting ( was blocket by semaphre )
+		if ( hBL->int_wait != 0 ) {
+			hBL->int_wait = 0 ;
+			// call that function with his argument argument
+			HAL_UART_RxCpltCallback( hBL->ptr_data ) ;
+		}
+		
+		if ( an != -1 ) {
+			// 'an' is the index of full buffer which must be handled
+			// Call parser:
+			bl_handleResp( fh_param, (char *)hBL->buff[an] ) ;
+			
+			hBL->ix_buff[an] = 200 ; // free that buffer
+
+		} // Handle response/event - buffer pointed by index: ix_buff[an]
+	
+	}
+}
+
+
+/**	Must be called after each UART receive (RX) complete
+*		BLR_STRUCT_BUFF_NO ~!!!
+*/
+int32_t bl_chngStatBuff( BLR_buff_TypeDef * hBL ) {
+	
+	size_t i ;
+	int32_t ix = -1;
+	
+	// Semaphore down
+	hBL->semaphore = 0;
+	
+	// Find reserved buffer -> it has had just received data
+	for( i = 0 ; i < BLR_STRUCT_BUFF_NO ; ++i ) {
+		if ( hBL->ix_buff[i] > 200 ) {
+			ix = i ;
+			break ;
+		}
+	}
+	
+	// that is fatal error! Missing data!
+	if ( ix == -1 ) {
+		hBL->semaphore = 1;
+		return -1 ;
+	}
+	
+	// Set information that here are new data
+	hBL->ix_buff[ix] -= 201 ; 				
+	
+	
+	// Reserve free buffer for next incomming data
+	ix = -1 ;
+	for ( i = 0 ; i < BLR_STRUCT_BUFF_NO ; ++i ) {
+		if ( hBL->ix_buff[i] == 200 ) {
+			ix = i ;
+			hBL->ix_buff[i] += (1 + i) ;
+			break ;
+		}
+	}
+	
+	// Semaphore up
+	hBL->semaphore = 1;
+	
+	// There is no free buffer!
+	if ( ix == -1 ) {
+		return -2 ;
+	}
+	
+	return ix ;
 }
 
 
@@ -49,7 +169,7 @@ void bl_init_buffers( char * buff_tab, uint_fast8_t no, size_t size ) {
 /**
 *
 */
-int_fast8_t bl_handleResp( BL_Data_TypeDef * _hBL, const char * src ) {
+int_fast8_t bl_handleResp( void * _hBL, const char * src ) {
 	
 	static char _name[BLR_REP_NAME_LEN] ;
 	static char _resttxt[BLR_RESTTXT_SIZE] ;
@@ -69,10 +189,7 @@ int_fast8_t bl_handleResp( BL_Data_TypeDef * _hBL, const char * src ) {
 	
 	// Got index, so call proper handle functions for that response/event from bluetooth
 	bl_fh_run( _hBL, ret, &_resttxt[0] ) ;
-	
-	
-	/* to do error handler */
-	
+		
 	return 0 ;
 }
 

@@ -13,44 +13,44 @@
 	 
 	 
 typedef struct sens_param_typedef {
-	uint_fast8_t temp_tot ;				/// Total part of the temperature
-	uint_fast16_t temp_frac ; 		/// Fractional part of the temperature
+	volatile uint_fast8_t temp_tot ;				/// Total part of the temperature
+	volatile uint_fast16_t temp_frac ; 		/// Fractional part of the temperature
 	
-	uint_fast16_t press_tot ;			/// 
-	uint_fast16_t press_frac ;		///
+	volatile uint_fast16_t press_tot ;			/// 
+	volatile uint_fast16_t press_frac ;		///
 
-	uint_fast8_t humidity ;				/// in %
+	volatile uint_fast8_t humidity ;				/// in %
 	
 } sensors_TypeDef ;
 
 
 typedef struct remote_weather_typedef {
 	
-	char date[11] ; 							/// date for that weather data, e.g. 23.07.2015 - null terminated
-	char time[6] ;								/// time for that weather data, e.g. 13:00
+	volatile char date[11] ; 							/// date for that weather data, e.g. 23.07.2015 - null terminated
+	volatile char time[6] ;								/// time for that weather data, e.g. 13:00
 	
-	uint_fast8_t temp ;						/// only total part of value
-	uint_fast16_t pressure ;			/// atmospheric pressure in [hPa]
-	uint_fast8_t humidity ; 			/// in %
-	uint_fast8_t ch_rain ;				/// chece of rain in %
+	volatile uint_fast8_t temp ;						/// only total part of value
+	volatile uint_fast16_t pressure ;			/// atmospheric pressure in [hPa]
+	volatile uint_fast8_t humidity ; 			/// in %
+	volatile uint_fast8_t ch_rain ;				/// chece of rain in %
 	
 } weather_TypeDef ;
 
 
 typedef struct bluetooth_connection_typedef {
 	
-	char rem_mac[13] ;						/// connected remote mac address
-	uint_fast8_t conn_handler ;		/// connection handler
-	uint_fast16_t srv_atr_h ; 		/// remote service attribute handle 
-	uint_fast16_t srv_last_h ; 		/// attribute handle of the last attribute in the service
-	uint_fast16_t srv_uuid ;			/// service UUID
+	volatile char rem_mac[12] ;						/// connected remote mac address
+	volatile uint_fast8_t conn_handler ;		/// connection handler
+	volatile uint_fast16_t srv_atr_h ; 		/// remote service attribute handle 
+	volatile uint_fast16_t srv_last_h ; 		/// attribute handle of the last attribute in the service
+	volatile uint_fast16_t srv_uuid ;			/// service UUID
 	
-	uint_fast16_t char_attr_h[10] ; 	/// characteristic value attribute handle
-	uint_fast16_t char_uuid[10] ;			/// uuid of the characteristic
+	volatile uint_fast16_t char_attr_h[10] ; 	/// characteristic value attribute handle
+	volatile uint_fast16_t char_uuid[10] ;			/// uuid of the characteristic
 	
 	// Descirptors of characteristic: 
-	uint_fast16_t char_descr_h[10] ;		/// characteristic descriptor attribute handle
-	uint_fast16_t char_descr_uudi[10] ; /// uuid of the characteristic descriptor
+	volatile 	uint_fast16_t char_descr_h[10] ;		/// characteristic descriptor attribute handle
+	volatile uint_fast16_t char_descr_uudi[10] ; /// uuid of the characteristic descriptor
 		
 } blueConn_TypeDef ;
 
@@ -72,6 +72,8 @@ typedef enum bl_hf_error_code {
 	BLR_GATT_REQ_PENDING=12,
 	/* STOP BLUETOOTH AT - ERROR CODE */
 	
+	BL_CONNECT_HANDLE_ERR,			/// Error when tried to read connection handle
+	BL_CONNECT_ADDR_ERR,				/// Error when tried to read address of connected device
 	/*  to do */
 	GATT_DONE_ERR
 } hf_err_TypeDef ;
@@ -81,7 +83,9 @@ typedef enum bl_hf_status {
 	BL_NOACTION, 
 	BL_RESPONSE_OK,
 	BL_RESPONSE_ERR,
-
+	
+	BL_EV_CONNECT,
+	
 	LIB_HF_ERR,						// this is library internal error - is set if it occur in one of bl_hf_xxxx() functions
 	BL_VAL_CHANGED,
 	BL_VAL_READ
@@ -94,8 +98,8 @@ typedef struct bluetooth_data_typedef {
 	sensors_TypeDef local_data ;
 	weather_TypeDef remote_data ;
 	
-	uint_fast8_t hours ;					/// Current hour - valid only when was bluetooth connection established
-	uint_fast8_t min ;						/// Current minutes - valid only when was bluetooth connectio established
+	volatile uint_fast8_t hours ;		/// Current hour - valid only when was bluetooth connection established
+	volatile uint_fast8_t min ;			/// Current minutes - valid only when was bluetooth connectio established
 	
 	blueConn_TypeDef conn ;				/// Bluetooth connection parameters
 	

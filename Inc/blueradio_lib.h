@@ -7,7 +7,14 @@ extern "C" {
 
 #include "stm32f4xx.h"
 #include <stddef.h>
+#include <signal.h>
+#include <stdbool.h>
 #include "main_sys.h"
+	
+// That are assembly functions for semaphore - defined in semaphore_src.s file
+extern void sem_inc( volatile void * _sem ) ;
+extern void sem_dec( volatile void * _sem ) ;
+
 	
 	
 #define BLR_REP_NAME_LEN 11			// Minimal size of table that contain response/event name with \0 character
@@ -22,15 +29,27 @@ extern "C" {
 #define BLR_STRUCT_BUFF_SIZE 120
 typedef struct blr_buffer_typedef {
 	volatile char * volatile buff[BLR_STRUCT_BUFF_NO] ;	/// contain buffers pointers
-	volatile uint_fast8_t ix_buff ;						/// in the bits is hidden information which buffer is full, e.g 
-																						/// if at bit 0 is 1 that means buff[0] char table is full
-	volatile uint_fast8_t semafor ;						/// semafor for protecting writing data to that structure
+	
+	volatile sig_atomic_t ix_buff[BLR_STRUCT_BUFF_NO] ;	/// provides atomic operation
+	// rezerwacja : 200 + 1 + bufer index - potem wpisanie indeksu zapelnionego to po porostu -201
+	// 200 - wolny
+	// < 200 - zawiera indeks buforu zapelnionego
+	
+	volatile sig_atomic_t semaphore ;
+	
+	volatile sig_atomic_t int_wait ;					// If it is != 0 then UART RX cplt callback was blocket by semaphore
+	void * volatile ptr_data ;								// Stores address of data that must be send to UART RX callback when
+																						// that callback was suspended. It always must be set if int_wait is set
+	
 } BLR_buff_TypeDef ;	
 	
 	
 /* Function declarations */
-void bl_init_buffers( char * buff_tab, uint_fast8_t no, size_t size ) ;
-int_fast8_t bl_handleResp( BL_Data_TypeDef * _hBL, const char * src ) ;
+void bl_init_buffers(  BLR_buff_TypeDef * hBL, char * buff_tab, uint_fast8_t no, size_t size ) ;
+void bl_checkEvents( BLR_buff_TypeDef * hBL, void * fh_param ) ;
+int32_t bl_chngStatBuff( BLR_buff_TypeDef * hBL ) ; 		// Must be called in UART RX callbacks after when buffer was read
+
+int_fast8_t bl_handleResp( void * _hBL, const char * src ) ;
 static int_fast16_t match_rsp( const char * str ) ;
 static int_fast8_t get_resp_name ( const char * src, char *name, char *resttxt ) ;
 
