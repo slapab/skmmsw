@@ -13,6 +13,7 @@ extern "C" {
 	
 
 // Registers
+#define MPL_STATUS_REG 0x00
 #define MPL_SYSMOD_REG 0x11
 #define MPL_CTRL_REG1 0x26
 // Masks	
@@ -21,6 +22,10 @@ extern "C" {
 #define MPL_BIT_OST_MASK 0x02
 #define MPL_BITS_OS_MASK(_VAL_) (uint8_t)((_VAL_) << 3)
 #define MPL_BIT_ALT_MASK 0x80
+	
+#define MPL_BIT_TDR_MASK 0x02
+#define MPL_BIT_PDR_MASK 0x04
+#define MPL_BIT_PTDR_MASK 0x8
 	
 // Functions: 
 HAL_StatusTypeDef mpl_StandbyMode( I2C_HandleTypeDef * ptr_hi2c ) ;
@@ -34,8 +39,20 @@ HAL_StatusTypeDef mpl_setBitInReg(
 	uint8_t mask
 );
 
-uint16_t mpl_get_Tempfrac( uint8_t t_frac ) ;
 
+
+
+uint32_t mpl_ReadStore_Data( 
+					I2C_HandleTypeDef * hI2C,
+					void * p_storage,
+					uint8_t * p_buff 
+					) ;
+					
+// These functions should be static functions
+uint32_t mpl_get_Tempfrac( uint8_t t_frac ) ;
+uint32_t mpl_get_Pval( const uint8_t * data ) ;
+uint8_t mpl_get_Pfrac( uint8_t fracByte ) ;
+uint32_t mpl_get_Psea( uint8_t * data ) ;
 
 #ifdef __cplusplus
 }

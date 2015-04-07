@@ -21,7 +21,7 @@ void delay_ms( const uint32_t delay );
 
 extern UART_HandleTypeDef huart5;
 extern I2C_HandleTypeDef hi2c3;
-extern BLR_buff_TypeDef blr_buffers ;		//Bluetooth UART buffers stearing handle 
+extern BLR_buff_TypeDef blr_buffers ;		// Bluetooth UART buffers stearing handle 
 
 // buffers for Bluetooth UART data
 char bl_buff[BLR_STRUCT_BUFF_NO][BLR_STRUCT_BUFF_SIZE] ;	
@@ -31,6 +31,7 @@ BL_Data_TypeDef weather_data ;
 
 
 	int a = 0 ;
+	
 	size_t size_string = 3 ;
 	char send_string[10] ;
 	// Get ID from I2C barometer sensor: 
@@ -45,7 +46,6 @@ int main(void)
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
-
   /* Configure the system clock */
   SystemClock_Config();
 
@@ -58,33 +58,19 @@ int main(void)
   MX_UART5_Init();
 	MX_I2C_Init();
 
-	// Let know UART callbackcplt function whch buffer was reserved
-	blr_buffers.ix_buff[0] = 200+1+0;	// 1 is the standard offset, 0 is the index of buffer which is reserved
+	// Let know UART callbackcplt function which buffer was reserved at start
+	blr_buffers.ix_buff[0] = 200+1+0;	// 200+1 is the standard offset - for reserwation, 0 is the index of buffer which is reserved
 	HAL_UART_Receive_IT(&huart5, (uint8_t*)blr_buffers.buff[0], BLR_STRUCT_BUFF_SIZE );
 	
-	//sem_dec( &blr_buffers.semaphore ) ;
 	
 	// Send char over 'semihosting' - initialization( without it, sometimes first character is missing )
 	printf( " START \n\n" ) ;
 
-	//sem_inc( &blr_buffers.semaphore ) ;
 	
 	const size_t user_cmd_size = 80 ;
 	char user_cmd[user_cmd_size] ;
 	size_t rcv_cmd_size ;
 	
-	// Enable interrupt for UART TX empty
-	//__HAL_UART_ENABLE_IT(&huart5, UART_IT_RXNE); 
-	
-	
-	// Disable Dual mode
-	send_string[0] = 'A' ; 
-	send_string[1] = 'T' ; 
-	send_string[2] = 'D' ; 
-	send_string[3] = 'C' ; 
-	send_string[4] = 0x0D ; // CR symbol
-	size_string = 5 ;
-	usart_sendString( send_string, size_string ) ;
 	
 	//delay_ms(500) ;
 	
@@ -133,11 +119,30 @@ int main(void)
 	usart_sendString( user_cmd, size_string ) ;
 	
 	
-	delay_ms(500) ;
+	
 	*/
+
+
+
+	// stop all running commands in bluetooth module
+	ble_stopallcmd( &weather_data, &huart5, &send_string[0] ) ;
 	
-	
-	//HAL_I2C_Mem_Read_IT(&hi2c3, 0xC0, 0x00, I2C_MEMADD_SIZE_8BIT, &i2c_rcv_data[0], 4 ) ;
+	// Get first data - pressure and temperature 
+	// next try to set advertising data in module
+	if ( mpl_start_OneShot(&hi2c3, 5, 0) == HAL_OK ) {
+		delay_ms(600) ;
+		if ( 1 == mpl_ReadStore_Data(&hi2c3, &weather_data, &i2c_rcv_data[0] ) ) {
+			
+			printf( "\nT = %d.%i [C]\n", weather_data.local_data.temp_tot, weather_data.local_data.temp_frac  ) ;
+			printf("\nPreasure = %i [hPa]\n",  weather_data.local_data.press_sea ) ;
+			
+			// Start advertising:
+			bl_advertON( &weather_data, &huart5 ) ;
+			
+		} else {
+			printf("\nProblem z odczytem\n" );
+		}
+	}
 	
 	//delay_ms(500) ;
   while (1)
@@ -158,7 +163,7 @@ int main(void)
 			// Try read prassure and temperature
 			
 			// Start 'OneShot' measurement
-			if ( mpl_start_OneShot(&hi2c3, 5, 1) == HAL_OK ) {
+			if ( mpl_start_OneShot(&hi2c3, 5, 0) == HAL_OK ) {
 					
 					delay_ms(1000) ; // about 512 ms when oversampling is set to 128
 					i2c_rcv_data[6] = i2c_rcv_data[7] = 0xFF;
@@ -166,6 +171,10 @@ int main(void)
 						== HAL_OK )  {
 						printf( "\nData read successfully.\n") ;
 						printf( "\nT = %d.%i [C]\n", i2c_rcv_data[4], mpl_get_Tempfrac(i2c_rcv_data[5]) ) ;
+						// print preassure
+						printf("\nPreasure = %i [hPa]\n", mpl_get_Psea( &i2c_rcv_data[1] )) ;
+
+							
 						} else 
 						printf( "\nError while tried to read data from IC\n");
 				

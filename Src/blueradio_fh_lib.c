@@ -133,6 +133,9 @@ static void bl_fh_ERROR ( void *_hBL, const char * str ) {
 static void	bl_fh_DONE( void *_hBL, const char * str ) { 	
 	// Documentation says that DONE event has two additional data - single digit in ASCII for each
 	PRINTF("BL_FH_DONE", (10* (uint_fast8_t)(str[0] - 0x30)) + (uint_fast8_t)(str[2] - 0x30) ) ;
+	
+	((BL_Data_TypeDef *)_hBL)->status = BL_EV_DONE ;
+	
 return;
 }
 

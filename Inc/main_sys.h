@@ -6,18 +6,18 @@
 
 #include "stm32f4xx_hal.h"
 
-// For debugging only
+	// For debugging only
 	 #include <stdio.h>
 	 #define PRINTF(_txt_, _d_) printf("\n%s : %d\n", (_txt_), (_d_))
 
 	 
 	 
 typedef struct sens_param_typedef {
-	volatile uint_fast8_t temp_tot ;				/// Total part of the temperature
-	volatile uint_fast16_t temp_frac ; 		/// Fractional part of the temperature
+	volatile uint_fast8_t temp_tot ;			/// Total part of the temperature
+	volatile uint32_t temp_frac ; 				/// Fractional part of the temperature
 	
-	volatile uint_fast16_t press_tot ;			/// 
-	volatile uint_fast16_t press_frac ;		///
+	volatile uint32_t press_sea ;					/// Pressure calculated at sea level
+	//volatile uint_fast16_t press_frac ;		///
 
 	volatile uint_fast8_t humidity ;				/// in %
 	
@@ -85,6 +85,7 @@ typedef enum bl_hf_status {
 	BL_RESPONSE_ERR,
 	
 	BL_EV_CONNECT,
+	BL_EV_DONE,
 	
 	LIB_HF_ERR,						// this is library internal error - is set if it occur in one of bl_hf_xxxx() functions
 	BL_VAL_CHANGED,
@@ -103,9 +104,9 @@ typedef struct bluetooth_data_typedef {
 	
 	blueConn_TypeDef conn ;				/// Bluetooth connection parameters
 	
-	hf_stat_TypeDef status ;			/// The value is different than BL_NOACT if something was changed
+	volatile hf_stat_TypeDef status ;			/// The value is different than BL_NOACT if something was changed
 	/* to do, more info about status changed, e.g on which ch-stic handle are data changed */
-	hf_err_TypeDef error ;				/// Error code/source
+	volatile hf_err_TypeDef error ;				/// Error code/source
 	
 } BL_Data_TypeDef;
 

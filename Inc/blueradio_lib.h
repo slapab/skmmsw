@@ -48,6 +48,9 @@ typedef struct blr_buffer_typedef {
 void bl_init_buffers(  BLR_buff_TypeDef * hBL, char * buff_tab, uint_fast8_t no, size_t size ) ;
 void bl_checkEvents( BLR_buff_TypeDef * hBL, void * fh_param ) ;
 int32_t bl_chngStatBuff( BLR_buff_TypeDef * hBL ) ; 		// Must be called in UART RX callbacks after when buffer was read
+void bl_advertON( BL_Data_TypeDef * hBL, UART_HandleTypeDef * hUART ) ;
+void ble_stopallcmd( BL_Data_TypeDef * hBL, UART_HandleTypeDef * hUART, char * buff );
+
 
 int_fast8_t bl_handleResp( void * _hBL, const char * src ) ;
 static int_fast16_t match_rsp( const char * str ) ;
