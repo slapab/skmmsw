@@ -33,7 +33,6 @@ int main(void)
   GUI_Init();
   
   LCD_MainTask();
-  LCD_PhoneTask();
 	
   while (1) 
   {

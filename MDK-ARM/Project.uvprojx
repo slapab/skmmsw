@@ -419,11 +419,6 @@
           <GroupName>Application/User</GroupName>
           <Files>
             <File>
-              <FileName>BASIC_HelloWorld.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Src\BASIC_HelloWorld.c</FilePath>
-            </File>
-            <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Src\main.c</FilePath>
@@ -432,6 +427,11 @@
               <FileName>stm32f4xx_it.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Src\stm32f4xx_it.c</FilePath>
+            </File>
+            <File>
+              <FileName>LCD_MainTask.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\LCD_MainTask.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -654,11 +654,6 @@
               <FilePath>..\Drivers\STM32F429i_HAL_Driver\Src\stm32f4xx_hal_spi.c</FilePath>
             </File>
             <File>
-              <FileName>stm32f4xx_hal_tim.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Drivers\STM32F429i_HAL_Driver\Src\stm32f4xx_hal_tim.c</FilePath>
-            </File>
-            <File>
               <FileName>stm32f4xx_hal_uart.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Drivers\STM32F429i_HAL_Driver\Src\stm32f4xx_hal_uart.c</FilePath>
@@ -667,11 +662,6 @@
               <FileName>stm32f4xx_ll_fmc.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Drivers\STM32F429i_HAL_Driver\Src\stm32f4xx_ll_fmc.c</FilePath>
-            </File>
-            <File>
-              <FileName>stm32f4xx_hal_tim_ex.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Drivers\STM32F429i_HAL_Driver\Src\stm32f4xx_hal_tim_ex.c</FilePath>
             </File>
           </Files>
         </Group>
