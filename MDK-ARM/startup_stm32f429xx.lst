@@ -905,7 +905,7 @@ ARM Macro Assembler    Page 14
               00000000 
 Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M4.fp --apcs=int
 erwork --depend=.\stm32f429i_disco\startup_stm32f429xx.d -o.\stm32f429i_disco\s
-tartup_stm32f429xx.o -I..\Inc -IE:\OneDrive\Study\SKMMSW\LCD\MDK-ARM\RTE -IC:\K
+tartup_stm32f429xx.o -I..\Inc -ID:\OneDrive\Study\SKMMSW\LCD\MDK-ARM\RTE -IC:\K
 eil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.3.0\Drivers\CMSIS\Device\ST\STM32F4xx\Incl
 ude -IC:\Keil_v5\ARM\CMSIS\Include --predefine="__MICROLIB SETA 1" --predefine=
 

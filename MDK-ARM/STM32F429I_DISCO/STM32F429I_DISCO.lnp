@@ -1,8 +1,8 @@
 --cpu Cortex-M4.fp
 ".\stm32f429i_disco\startup_stm32f429xx.o"
-".\stm32f429i_disco\basic_helloworld.o"
 ".\stm32f429i_disco\main.o"
 ".\stm32f429i_disco\stm32f4xx_it.o"
+".\stm32f429i_disco\lcd_maintask.o"
 ".\stm32f429i_disco\ili9341.o"
 ".\stm32f429i_disco\stmpe811.o"
 ".\stm32f429i_disco\stm32f429i_discovery.o"
@@ -34,10 +34,8 @@
 ".\stm32f429i_disco\stm32f4xx_hal_rcc_ex.o"
 ".\stm32f429i_disco\stm32f4xx_hal_sdram.o"
 ".\stm32f429i_disco\stm32f4xx_hal_spi.o"
-".\stm32f429i_disco\stm32f4xx_hal_tim.o"
 ".\stm32f429i_disco\stm32f4xx_hal_uart.o"
 ".\stm32f429i_disco\stm32f4xx_ll_fmc.o"
-".\stm32f429i_disco\stm32f4xx_hal_tim_ex.o"
 --library_type=microlib --strict --scatter ".\STM32F429I_DISCO\STM32F429I_DISCO.sct"
 
 --diag_suppress=L6329 --summary_stderr --info summarysizes --map --xref --callgraph --symbols
