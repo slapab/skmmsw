@@ -45,11 +45,23 @@ typedef struct blr_buffer_typedef {
 	
 	
 /* Function declarations */
-void bl_init_buffers(  BLR_buff_TypeDef * hBL, char * buff_tab, uint_fast8_t no, size_t size ) ;
-void bl_checkEvents( BLR_buff_TypeDef * hBL, void * fh_param ) ;
+void bl_buffers_init(  BLR_buff_TypeDef * hBL, char * buff_tab, uint_fast8_t no, size_t size ) ;
+int32_t bl_buffers_reserve( BLR_buff_TypeDef * hBL ) ;
+void bl_buffers_release( void ) ;
+int32_t bl_buffer_clearStatus( BLR_buff_TypeDef * hBL );
+
 int32_t bl_chngStatBuff( BLR_buff_TypeDef * hBL ) ; 		// Must be called in UART RX callbacks after when buffer was read
-void bl_advertON( BL_Data_TypeDef * hBL, UART_HandleTypeDef * hUART ) ;
+void bl_checkEvents( BLR_buff_TypeDef * hBL, void * fh_param ) ;
+
+void bl_advertUpdate( BL_Data_TypeDef * hBL, UART_HandleTypeDef * hUART ) ;
+hf_stat_TypeDef bl_advertisingON(
+			BL_Data_TypeDef * hBL,
+			UART_HandleTypeDef * hUART,
+			char * buff
+		) ;
+
 void ble_stopallcmd( BL_Data_TypeDef * hBL, UART_HandleTypeDef * hUART, char * buff );
+
 
 
 int_fast8_t bl_handleResp( void * _hBL, const char * src ) ;

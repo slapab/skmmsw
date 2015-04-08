@@ -7,13 +7,23 @@
 #include "stm32f4xx_hal.h"
 
 	// For debugging only
+	 #define _DEBUG_PRINTF_ 1
 	 #include <stdio.h>
 	 #define PRINTF(_txt_, _d_) printf("\n%s : %d\n", (_txt_), (_d_))
 
+
+
+// in [ms] time between next two readings
+#define SENSORS_CHECK_TIME 5000
 	 
+struct time_sens_TypeDef {
+	uint32_t timer_sensors ;
+	uint32_t is_converting ;
+};
+
 	 
 typedef struct sens_param_typedef {
-	volatile uint_fast8_t temp_tot ;			/// Total part of the temperature
+	volatile uint8_t temp_tot ;						/// Total part of the temperature
 	volatile uint32_t temp_frac ; 				/// Fractional part of the temperature
 	
 	volatile uint32_t press_sea ;					/// Pressure calculated at sea level

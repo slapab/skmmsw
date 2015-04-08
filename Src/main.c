@@ -29,6 +29,10 @@ char bl_buff[BLR_STRUCT_BUFF_NO][BLR_STRUCT_BUFF_SIZE] ;
 // SENSORS AND BLUETOOTH DATA
 BL_Data_TypeDef weather_data ;
 
+// Time counter - for sensors checking
+struct time_sens_TypeDef sensors_timing = { .timer_sensors = 0,
+																						.is_converting = 0 } ;
+
 
 	int a = 0 ;
 	
@@ -40,7 +44,8 @@ BL_Data_TypeDef weather_data ;
 int main(void)
 {
 
-  
+	uint32_t utmp ;
+	int32_t itmp ;
 
   /* MCU Configuration----------------------------------------------------------*/
 
@@ -51,7 +56,7 @@ int main(void)
 
 	
 	// Init bluetooth UART buffers structure
-	bl_init_buffers( &blr_buffers, bl_buff[0], BLR_STRUCT_BUFF_NO, BLR_STRUCT_BUFF_SIZE) ;
+	bl_buffers_init( &blr_buffers, bl_buff[0], BLR_STRUCT_BUFF_NO, BLR_STRUCT_BUFF_SIZE) ;
 	
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
@@ -59,8 +64,8 @@ int main(void)
 	MX_I2C_Init();
 
 	// Let know UART callbackcplt function which buffer was reserved at start
-	blr_buffers.ix_buff[0] = 200+1+0;	// 200+1 is the standard offset - for reserwation, 0 is the index of buffer which is reserved
-	HAL_UART_Receive_IT(&huart5, (uint8_t*)blr_buffers.buff[0], BLR_STRUCT_BUFF_SIZE );
+	itmp = bl_buffers_reserve( &blr_buffers ) ;
+	HAL_UART_Receive_IT(&huart5, (uint8_t*)blr_buffers.buff[itmp], BLR_STRUCT_BUFF_SIZE ) ;
 	
 	
 	// Send char over 'semihosting' - initialization( without it, sometimes first character is missing )
@@ -137,18 +142,91 @@ int main(void)
 			printf("\nPreasure = %i [hPa]\n",  weather_data.local_data.press_sea ) ;
 			
 			// Start advertising:
-			bl_advertON( &weather_data, &huart5 ) ;
+			bl_advertUpdate( &weather_data, &huart5 ) ;
+			
+			// Try to start advertising mode
+			if ( BL_RESPONSE_OK == bl_advertisingON( &weather_data, &huart5, &send_string[0] ) ) {
+				#ifdef _DEBUG_PRINTF_
+				printf("\nAdvertising MODE has been turned on.\n" );
+				#endif
+			} 
+			else {
+				#ifdef _DEBUG_PRINTF_
+				printf("\nAdvertising MODE has NOT been turned on.\n" );
+				#endif
+				
+			}
+			
 			
 		} else {
-			printf("\nProblem z odczytem\n" );
+			#ifdef _DEBUG_PRINTF_
+				printf("\nProblem z odczytem\n" );
+			#endif
 		}
 	}
 	
-	//delay_ms(500) ;
+	
+	
   while (1)
   {
 		
+		// It has to be called becouse it is part of UART IT reading system
 		bl_checkEvents( &blr_buffers, &weather_data ) ;
+		
+		// start reading value from sensors
+		if ( sensors_timing.timer_sensors >= SENSORS_CHECK_TIME ) {
+			
+			// Start OneShot mesurement
+			if ( sensors_timing.is_converting == 0 ) {
+				sensors_timing.is_converting = 1 ;
+				
+				// Start reading temp and pressure
+				if ( HAL_OK != mpl_start_OneShot(&hi2c3, 5, 0) ) {
+					sensors_timing.timer_sensors = 0 ;
+					sensors_timing.is_converting = 0 ;
+				} // Error while connecting with MPL3115A2 sensor
+				
+			}
+			
+			
+			// Need to wait while data are prepared in sensors
+			
+			// At the end of that if statement the LCD can be updated
+			if ( (sensors_timing.timer_sensors >= (SENSORS_CHECK_TIME + 600)) && 
+					 (sensors_timing.is_converting == 1 ) 
+				 ) {	 
+				sensors_timing.timer_sensors = 0 ;
+				sensors_timing.is_converting = 0 ;
+				
+				// Read data from MPL3115A2 sensor
+				if ( 1 == mpl_ReadStore_Data(&hi2c3, &weather_data, &i2c_rcv_data[0] ) ) {
+				
+				#ifdef _DEBUG_PRINTF_
+					printf( "\nT = %d.%i [C]\n", weather_data.local_data.temp_tot, weather_data.local_data.temp_frac  ) ;
+					printf("\nPreasure = %i [hPa]\n",  weather_data.local_data.press_sea ) ;	
+				#endif
+					
+					// Change values in advertisig payload: 
+					bl_advertUpdate( &weather_data, &huart5 ) ;
+					
+					
+					/// ***** HERE CAN BE CODE TO UPDATE LCD ***** ///
+					/// ***** data are stored in (BL_Data_TypeDef) weather_data vairable
+					
+					
+				} // If read and store in structure has been done properly
+			
+				
+				
+			}	// After waiting for sensors
+			
+		} // IF - start reading value
+		
+		
+		/* !!!!!!! OD TEGO MIEJSCA NA RAZIE NIE RUSZAC
+							 DO DEBUGOWNIA POTRZEBNE
+			 !!!!!!!
+		*/
 		
 		if ( a == 1) {
 			a = 0;

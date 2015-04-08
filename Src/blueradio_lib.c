@@ -38,7 +38,7 @@ static const char blrsp_tab[BLR_REPS_CNT][BLR_REP_NAME_LEN] = {
 *		@param no number of buffers should be the same as @ref BLR_STRUCT_BUFF_NO macro 
 *		@param size how many elements are in each buffer - should be the same as @ref BLR_STRUCT_BUFF_SIZE macro
 */
-void bl_init_buffers( BLR_buff_TypeDef * hBL, char * buff_tab, uint_fast8_t no, size_t size ) {
+void bl_buffers_init( BLR_buff_TypeDef * hBL, char * buff_tab, uint_fast8_t no, size_t size ) {
 	
 	size_t i ;
 	for ( i = 0 ; i < no ; ++ i ) {
@@ -52,14 +52,66 @@ void bl_init_buffers( BLR_buff_TypeDef * hBL, char * buff_tab, uint_fast8_t no, 
 }
 
 
-/**	Sets all buffers as free to use
+
+/**	That function resets all bluetooth UART information in
+*		@ref BLR_buff_TypeDef structure. 
+*	
+*		@param hBL pointer to @ref BLR_buff_TypeDef structure
+*		@return it return the same values as @ref bl_buffers_reserve() does.
 *
 */
-void bl_buffers_frees( void ) {
+int32_t bl_buffer_clearStatus( BLR_buff_TypeDef * hBL ) {
+	
+	// Reset data in structure: 
+	hBL->semaphore = 1 ;
+	hBL->int_wait = 0 ;
+	hBL->ptr_data = NULL ;
+	
+	// Set all UART buffers as free to use
+	bl_buffers_release() ;
+	
+	
+	// reserve one buffer for next incoming data
+	return bl_buffers_reserve( hBL ) ;
+	
+}
+
+/**	Sets all bluetooth UART buffers as free to use
+*
+*/
+void bl_buffers_release( void ) {
 	size_t i ;
 	for ( i = 0 ; i < BLR_STRUCT_BUFF_NO ; ++i ) 
 		blr_buffers.ix_buff[i] = 200 ;
 }
+
+
+/** Tries to reserve buffer if it is free ( not full and not using ). 
+*
+*	 @warning	That function is adapted only to @ref BLR_buff_TypeDef structure and
+*  function that are using that structure.
+*
+*	 @param hBL pointer to @ref BLR_buff_TypeDef structure
+*	 @retval -1 if in tab: @ref BLR_buff_TypeDef.buff is no at least one free buffer
+*	 @retval >=0 index of reserved buffer
+*
+*/
+int32_t bl_buffers_reserve( BLR_buff_TypeDef * hBL ) {
+	
+	int32_t ix = -1 ;
+	size_t i ;
+	
+	for ( i = 0 ; i < BLR_STRUCT_BUFF_NO ; ++i ) {
+		if ( hBL->ix_buff[i] == 200 ) {
+			ix = i ;
+			hBL->ix_buff[i] += (1 + i) ;
+			break ;
+		}
+	}
+	
+	return ix ;
+}
+
 
 /**
 *		
@@ -170,15 +222,8 @@ int32_t bl_chngStatBuff( BLR_buff_TypeDef * hBL ) {
 	
 	
 	// Reserve free buffer for next incomming data
-	ix = -1 ;
-	for ( i = 0 ; i < BLR_STRUCT_BUFF_NO ; ++i ) {
-		if ( hBL->ix_buff[i] == 200 ) {
-			ix = i ;
-			hBL->ix_buff[i] += (1 + i) ;
-			break ;
-		}
-	}
-	
+	ix = bl_buffers_reserve( hBL ) ;
+		
 	// Semaphore up
 	hBL->semaphore = 1;
 	
@@ -274,8 +319,21 @@ static int_fast8_t get_resp_name ( const char * src, char *name, char *resttxt )
 }
 
 
-
-void bl_advertON( BL_Data_TypeDef * hBL, UART_HandleTypeDef * hUART ) {
+/**	Tries to set advertisement data to bluetooth module - payload in 
+*		advertising mode.
+*
+*		Data such as: temperature, pressure, humidity, gas concentration
+*		stored in @ref BL_Data_TypeDef.local_data are converted to string and
+*	 	with proper AT command are passing to bluetooth module.
+*
+*		@param hBL pointer to @ref BL_Data_TypeDef structure
+*		@param hUART pointer to (HAL) UART_HandleTypeDef structure
+*		
+*		@warning when temperature will have negative value but variable is unsigned type
+*						 so developer need to check MSB bit of that value and if it is 1 then
+*						 that value is negative!
+*/
+void bl_advertUpdate( BL_Data_TypeDef * hBL, UART_HandleTypeDef * hUART ) {
 	
 	// Create string to set advertisment data
 	// For BlueRadio module, data must contain at start: 
@@ -293,7 +351,7 @@ void bl_advertON( BL_Data_TypeDef * hBL, UART_HandleTypeDef * hUART ) {
 	
 	// Convert data to string
 	snprintf(advert_data, 17, "%02X%02X%02X%02X%02X%02X%02X%02X",
-					hBL->local_data.temp_tot, (uint32_t)(hBL->local_data.temp_frac>>8), 
+					(uint8_t)hBL->local_data.temp_tot, (uint32_t)(hBL->local_data.temp_frac>>8), 
 					(hBL->local_data.temp_frac & 0x000000FF), 
 					(uint32_t)(hBL->local_data.press_sea >> 8 ),
 					(hBL->local_data.press_sea & 0x000000FF),
@@ -325,16 +383,76 @@ void bl_advertON( BL_Data_TypeDef * hBL, UART_HandleTypeDef * hUART ) {
 		PRINTF( "\nAdvertising data NOT set\n", 0 );
 		
 	
+	// Sets the same data to 'scan response' payload
+	// ... to do ...
+	
 	// Reset status in BL structure
 	hBL->status = BL_NOACTION ;
 	
 }
 
 
-// Disable All running commands in module
+/**	Tries to turn on advertising mode in the bluetooth module
+*		
+*		@param hBL pointer to @ref BL_Data_TypeDef - to read status of response
+*		@param hUART pointer to (HAL) UART_HandleTypeDef structure - for UART transmision
+*		@param buff pointer to 8bit table with minimum 7 elements
+*		@return value of enum @ref hf_stat_TypeDef type
+*		@retval @ref BL_RESPONSE_OK if advertisment mode was turned on properly
+*		@retval @ref BL_RESPONSE_ERR if advertisment mode wasn't turn on properly
+*		@retval other value of @ref hf_stat_TypeDef type - but it means that
+*		bluetooth send to MCU other message than response for latest command.
+*		( if you get more error code check enum @ref hf_err_TypeDef )
+*		
+*		@see hf_err_TypeDef, hf_stat_TypeDef
+*/
+hf_stat_TypeDef bl_advertisingON(
+			BL_Data_TypeDef * hBL,
+			UART_HandleTypeDef * hUART,
+			char * buff
+		) {
+	
+	buff[0] = 'A' ; buff[1] = 'T' ; buff[2] = 'D' ;
+	buff[3] = 'S' ; buff[4] = 'L' ; buff[5] = 'E' ;
+	buff[6] = 0x0D ;
+	
+	// Reset status in BL structure
+	hBL->status = BL_NOACTION ;
+	// Send command to module 
+	HAL_UART_Transmit( hUART, (uint8_t *)&buff[0], 7 , 25 ) ;
+	
+	// Wait for response from bluetooth module
+	do {
+		bl_checkEvents( &blr_buffers, hBL ) ;
+	} while( hBL->status == BL_NOACTION ) ;
+	
+	
+	if ( hBL->status == BL_RESPONSE_OK ) {
+		return BL_RESPONSE_OK ;
+	}	// If Advertising was turned on properly 
+	else if ( hBL->status == BL_RESPONSE_ERR ) {
+		return BL_RESPONSE_ERR ;
+	}	// If Advertising wasn't turn on properly
+	
+	return hBL->status ;		// That couldn't happen
+}
+
+
+
+/** Disables ALL running commands in bluetooth module
+*	
+*		Should be used if you try to change some settings in module
+*		
+*		@param hBL pointer to @ref BLR_buff_TypeDef structure
+*		@param hUART pointer to (HAL) UART_HandleTypeDef structure
+*		@param buff pinter to buffer where will be AT command store - must have at least 5 elements!
+*
+*		@note The table poited by *buff argument must have at least 5 elements!
+*/
 void ble_stopallcmd( BL_Data_TypeDef * hBL, UART_HandleTypeDef * hUART, char * buff ) {
 	
 	uint32_t tick = HAL_GetTick() ;
+	int32_t ix ;
 	
 	buff[0] = 'A' ; 
 	buff[1] = 'T' ; 
@@ -345,18 +463,17 @@ void ble_stopallcmd( BL_Data_TypeDef * hBL, UART_HandleTypeDef * hUART, char * b
 	// Send command to module 
 	HAL_UART_Transmit( hUART, (uint8_t *)&buff[0], 5 , 20 ) ;
 	
-	// Discard all responses/events
+	// Discard all responses/events that should came in a few ms
 	while ( (HAL_GetTick() - tick) <= 150 ) {;}
 	
-	// Set all buffers as free
-	bl_buffers_frees() ;
-	
+		
 	// Reset status in BL structure
 	hBL->status = BL_NOACTION ;
-		
-		// Restart UART RX IT function:
-	blr_buffers.ix_buff[0] = 201 ;// reserve that buffer
-	HAL_UART_Receive_IT(hUART, (uint8_t*)blr_buffers.buff[0], BLR_STRUCT_BUFF_SIZE ); // start waiting for data
+	
+	// Clear current bluetooth UART buffers status - and get index of reserved buffer
+	ix = bl_buffer_clearStatus( &blr_buffers );
+	// Restart UART RX IT function:
+	HAL_UART_Receive_IT(hUART, (uint8_t*)blr_buffers.buff[ix], BLR_STRUCT_BUFF_SIZE ); // start waiting for data
 	
 }
 

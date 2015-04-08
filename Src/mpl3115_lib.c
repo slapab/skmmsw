@@ -125,7 +125,7 @@ uint32_t mpl_ReadStore_Data(
 		// Convert and store pressure at sea level:
 		((BL_Data_TypeDef *)p_storage)->local_data.press_sea = mpl_get_Psea( p_buff ) ;
 		// Convert and store temperature:
-		((BL_Data_TypeDef *)p_storage)->local_data.temp_tot = p_buff[3] ;
+		((BL_Data_TypeDef *)p_storage)->local_data.temp_tot = (uint8_t)p_buff[3] ;
 		((BL_Data_TypeDef *)p_storage)->local_data.temp_frac = mpl_get_Tempfrac( p_buff[4] );
 	
 		return 1 ;

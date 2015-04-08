@@ -5,10 +5,14 @@
 
 #include "usart.h"
 #include "i2c.h"
+#include "main_sys.h"
 
 extern I2C_HandleTypeDef hi2c3;
 
 extern UART_HandleTypeDef huart5;
+
+// in main.c
+extern struct time_sens_TypeDef sensors_timing ;
 
 /******************************************************************************/
 /*            Cortex-M4 Processor Interruption and Exception Handlers         */ 
@@ -19,14 +23,13 @@ extern UART_HandleTypeDef huart5;
 */
 void SysTick_Handler(void)
 {
-  /* USER CODE BEGIN SysTick_IRQn 0 */
-
-  /* USER CODE END SysTick_IRQn 0 */
+  
   HAL_IncTick();
   HAL_SYSTICK_IRQHandler();
-  /* USER CODE BEGIN SysTick_IRQn 1 */
-
-  /* USER CODE END SysTick_IRQn 1 */
+  
+	//Count interval for sensors reading
+	++sensors_timing.timer_sensors ;
+	
 }
 
 /**
