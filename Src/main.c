@@ -13,12 +13,10 @@
 #include "blueradio_lib.h"
 
 static void SystemClock_Config(void);
-extern void LCD_MainTask(void);
-extern void LCD_PhoneTask(void);
+extern void LCD_MainTask(const BL_Data_TypeDef* const data);
 
 int32_t bl_read_cmd(char * string, const size_t max_size);
 void delay_ms(const uint32_t delay);
-
 
 
 extern UART_HandleTypeDef huart5;
@@ -184,11 +182,12 @@ int main(void)
 	  }
   }
 
-LCD_MainTask();
 
+
+	
   while (1)
   {
-
+		LCD_MainTask(&weather_data);
 	  // It has to be called becouse it is part of UART IT reading system
 	  bl_checkEvents(&blr_buffers, &weather_data);
 
