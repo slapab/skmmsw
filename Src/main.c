@@ -29,6 +29,9 @@ char bl_buff[BLR_STRUCT_BUFF_NO][BLR_STRUCT_BUFF_SIZE] ;
 // SENSORS AND BLUETOOTH DATA
 BL_Data_TypeDef weather_data ;
 
+// Bluetooth connection status
+SYS_CONN_TypeDef conn_stat = DISCONNECTED ;
+
 // Time counter - for sensors checking
 struct time_sens_TypeDef sensors_timing = { .timer_sensors = 0,
 																						.is_converting = 0 } ;
@@ -69,7 +72,9 @@ int main(void)
 	
 	
 	// Send char over 'semihosting' - initialization( without it, sometimes first character is missing )
-	printf( " START \n\n" ) ;
+	#ifdef _DEBUG_PRINTF_
+		printf( " START \n\n" ) ;
+	#endif
 
 	
 	const size_t user_cmd_size = 80 ;
@@ -173,7 +178,16 @@ int main(void)
 		// It has to be called becouse it is part of UART IT reading system
 		bl_checkEvents( &blr_buffers, &weather_data ) ;
 		
-		// start reading value from sensors
+		// Try to read handles for characteristics when connection
+		// was established
+		if ( CONNECTED == conn_stat ) {
+			// Try read handles for characteristics
+			// if read was completed successfuly then set status as: 
+			// conn_stat = CONNECTED_WITH_DATA ;
+		}
+		
+		
+		// SENSORS ROUNTINE:
 		if ( sensors_timing.timer_sensors >= SENSORS_CHECK_TIME ) {
 			
 			// Start OneShot mesurement
@@ -235,7 +249,9 @@ int main(void)
 				//printf("\n %s \n ", user_cmd ) ;
 				usart_sendString( user_cmd, rcv_cmd_size ) ;
 			} else  {
+				#ifdef _DEBUG_PRINTF_
 				printf( "\n Bad command \n " ) ;
+				#endif
 			}
 		} else if ( a == 2 ) {
 			// Try read prassure and temperature
@@ -247,17 +263,23 @@ int main(void)
 					i2c_rcv_data[6] = i2c_rcv_data[7] = 0xFF;
 					if ( HAL_I2C_Mem_Read(&hi2c3, MPL_WRITE_ADDR, 0x00, I2C_MEMADD_SIZE_8BIT, &i2c_rcv_data[0], 8 , 20 ) 
 						== HAL_OK )  {
-						printf( "\nData read successfully.\n") ;
-						printf( "\nT = %d.%i [C]\n", i2c_rcv_data[4], mpl_get_Tempfrac(i2c_rcv_data[5]) ) ;
-						// print preassure
-						printf("\nPreasure = %i [hPa]\n", mpl_get_Psea( &i2c_rcv_data[1] )) ;
-
+							#ifdef _DEBUG_PRINTF_
+							printf( "\nData read successfully.\n") ;
+							printf( "\nT = %d.%i [C]\n", i2c_rcv_data[4], mpl_get_Tempfrac(i2c_rcv_data[5]) ) ;
+							// print preassure
+							printf("\nPreasure = %i [hPa]\n", mpl_get_Psea( &i2c_rcv_data[1] )) ;
+							#endif
 							
-						} else 
-						printf( "\nError while tried to read data from IC\n");
+						} else {
+							#ifdef _DEBUG_PRINTF_
+								printf( "\nError while tried to read data from IC\n");
+							#endif
+						}
 				
 			} else {
-				printf( "\nError while tried to start 'OneShot' measurement \n");
+				#ifdef _DEBUG_PRINTF_
+					printf( "\nError while tried to start 'OneShot' measurement \n");
+				#endif
 			}
 			
 		}

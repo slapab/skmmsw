@@ -2,8 +2,12 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
+
+/*User includes*/
 #include "main_sys.h"
 
+// in main.c - bluetooth connection status
+extern SYS_CONN_TypeDef conn_stat ;
 
 /**
 *		You can (should if it is possible) use these variables in bl_fh_xxxxx handling functions
@@ -146,8 +150,11 @@ static void	bl_fh_CONNECT( void *_hBL, const char * str ) {
 	// ADDR is the 6 bytes - this is 12 ASCII characters
 	
 	((BL_Data_TypeDef *)_hBL)->status = BL_EV_CONNECT;
+	((BL_Data_TypeDef *)_hBL)->error = BL_NO_ERRRORS;
+	
 	
 	// Read connection handle
+	// Can be < 10 and >= 10 value - so need check it by return value from bl_split_data()
 	fh_run_ret = bl_split_data( &str[0], (char*)&out_data[0], 2 ) ;
 	if( fh_run_ret == 1 )
 		((BL_Data_TypeDef *)_hBL)->conn.conn_handler = (uint_fast8_t)(out_data[0] - 0x30) ;
@@ -173,11 +180,13 @@ static void	bl_fh_CONNECT( void *_hBL, const char * str ) {
 		memcpy( (char*)((BL_Data_TypeDef *)_hBL)->conn.rem_mac, (char*)&out_data[0], 12 );
 	}	// Address has been read properly
 	else {
-		((BL_Data_TypeDef *)_hBL)->status = LIB_HF_ERR ;
+		//((BL_Data_TypeDef *)_hBL)->status = LIB_HF_ERR ;
 		((BL_Data_TypeDef *)_hBL)->error = BL_CONNECT_ADDR_ERR ;
 	} // Couldn't read address - ERROR
 	
 	
+	// Set status as connected: 
+	conn_stat = CONNECTED ;
 	
 	PRINTF("BL_FH_CONNECT", ((BL_Data_TypeDef *)_hBL)->conn.conn_handler );
 	PRINTF(out_data, 0) ;
@@ -185,7 +194,13 @@ static void	bl_fh_CONNECT( void *_hBL, const char * str ) {
 	
 	return; 
 }
-static void	bl_fh_DISCONNECT( void *_hBL, const char * str ) { return; }
+static void	bl_fh_DISCONNECT( void *_hBL, const char * str ) {
+	
+	// Set status as disconnected: 
+	conn_stat = DISCONNECTED ;
+	
+	return;
+}
 static void	bl_fh_DISCOVERY( void *_hBL, const char * str ) { return; }
 static void	bl_fh_PAIR_REQ( void *_hBL, const char * str ) { return; }
 static void	bl_fh_PAIRED( void *_hBL, const char * str ) { return; }

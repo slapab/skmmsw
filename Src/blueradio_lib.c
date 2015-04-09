@@ -5,6 +5,7 @@
 #include "blueradio_fh_lib.h"
 
 	 // For debugging only
+	 #define _DEBUG_DEF_
 	 #include <stdio.h>
 	 #define PRINTF(_txt_, _d_) printf("\n%s : %d\n", (_txt_), (_d_))
 
@@ -113,7 +114,16 @@ int32_t bl_buffers_reserve( BLR_buff_TypeDef * hBL ) {
 }
 
 
-/**
+/**	That function must be called on each place where program goes to
+*		'infinite' loop for long time.
+*		Checks if there is any of bluetooth UART buffer which contain data to handle.
+*		It's parsing data and is trying to get proper action depending on received
+*		event / response string. After that it frees buffer and trying reserve new
+*		one - but not the same - the buffer which index is as close to 0 as possible.
+*		
+*		@param hBL pointer to @ref BLR_buff_TypeDef structure
+*		@param fh_param pointer to data which will be passed to event/response handle 
+*		functions - check for functions in blueradio_lib.c/.h files and @ref bl_handleResp()
 *		
 *	 	@warning macro: BLR_STRUCT_BUFF_NO must have the same value as number
 *		of used buffers for storing UART data
@@ -237,8 +247,17 @@ int32_t bl_chngStatBuff( BLR_buff_TypeDef * hBL ) {
 
 
 
-/**
-*
+/**	Use this function to analyze AT format ascii bytes which has been
+*		just received from bluetooth. 
+*		@warning This function only parsing that bytes for matching event/response
+*		to proper handle function. The Developer must implement that functions - see
+*		bluetooth_fh_lib.c/.h files.
+*		
+*		@param _hBL pointer to data which will be passed to proper event/response
+*		handle function
+*		@param src pointer to bytes table (AT format) that have been received from bluetooth
+*		@retval 0 when event was handled properly
+*		@rerval other check functions: @ref get_resp_name(), @ref match_rsp()
 */
 int_fast8_t bl_handleResp( void * _hBL, const char * src ) {
 	
@@ -328,12 +347,14 @@ static int_fast8_t get_resp_name ( const char * src, char *name, char *resttxt )
 *
 *		@param hBL pointer to @ref BL_Data_TypeDef structure
 *		@param hUART pointer to (HAL) UART_HandleTypeDef structure
-*		
+*		@retval 0 if data cannot be set properly
+*		@retval 1 if data was set properly
+*
 *		@warning when temperature will have negative value but variable is unsigned type
 *						 so developer need to check MSB bit of that value and if it is 1 then
 *						 that value is negative!
 */
-void bl_advertUpdate( BL_Data_TypeDef * hBL, UART_HandleTypeDef * hUART ) {
+uint32_t bl_advertUpdate( BL_Data_TypeDef * hBL, UART_HandleTypeDef * hUART ) {
 	
 	// Create string to set advertisment data
 	// For BlueRadio module, data must contain at start: 
@@ -344,6 +365,7 @@ void bl_advertUpdate( BL_Data_TypeDef * hBL, UART_HandleTypeDef * hUART ) {
 	// we used 10 bytes of aur data + FF 85 00 FF = 14 bytes of user data
 	char advert_cmd[50] ;
 	char advert_data[29] ;
+	uint32_t tick_ms ;				// For timeout
 	
 	// xx = 0E - 14 bytes of data will be send to module
 	// OUR UUID  = 0AB3
@@ -372,23 +394,60 @@ void bl_advertUpdate( BL_Data_TypeDef * hBL, UART_HandleTypeDef * hUART ) {
 	// Send command to module 
 	HAL_UART_Transmit( hUART, (uint8_t *)&advert_cmd[0], 42 , 25 ) ;
 	
+	tick_ms = HAL_GetTick() ;
 	// Wait for response
 	do {
 		bl_checkEvents( &blr_buffers, hBL ) ;
-	} while( hBL->status == BL_NOACTION ) ;
+	} while( (hBL->status == BL_NOACTION) && ((HAL_GetTick() - tick_ms) <= 500) ) ;
 	
-	if ( hBL->status == BL_RESPONSE_OK )
-		PRINTF( "\nAdvertising data set\n", 0 );
-	else if ( hBL->status == BL_RESPONSE_ERR ) 
-		PRINTF( "\nAdvertising data NOT set\n", 0 );
+	if ( hBL->status == BL_RESPONSE_OK ) {
+		#ifdef _DEBUG_DEF_
+			PRINTF( "\nAdvertising data set\n", 0 );
+		#endif
+	}
+	else if ( hBL->status == BL_RESPONSE_ERR ) {
+		#ifdef _DEBUG_DEF_
+			PRINTF( "\nAdvertising data NOT set\n", 0 );
+		#endif
+		return 0 ;
+	} 
+	else {
+		return 0 ;
+	}
 		
 	
-	// Sets the same data to 'scan response' payload
-	// ... to do ...
+	// **** Sets the same data to 'scan response' payload:
+	
+	// Reset status in BL structure
+	hBL->status = BL_NOACTION ;
+	// Send command to module 
+	HAL_UART_Transmit( hUART, (uint8_t *)&advert_cmd[0], 42 , 25 ) ;
+	
+	tick_ms = HAL_GetTick();
+	// Wait for response
+	do {
+		bl_checkEvents( &blr_buffers, hBL ) ;
+	} while( (hBL->status == BL_NOACTION) && ((HAL_GetTick() - tick_ms) <= 500) ) ;
+	
+	if ( hBL->status == BL_RESPONSE_OK ) {
+		#ifdef _DEBUG_DEF_
+			PRINTF( "\nScanResponse data set\n", 0 );
+		#endif
+	}
+	else if ( hBL->status == BL_RESPONSE_ERR ) {
+		#ifdef _DEBUG_DEF_
+			PRINTF( "\nScanResponse data NOT set\n", 0 );
+		#endif
+		return 0 ;
+	} 
+	else {
+		return 0 ;
+	}
 	
 	// Reset status in BL structure
 	hBL->status = BL_NOACTION ;
 	
+	return 1;
 }
 
 
@@ -464,7 +523,7 @@ void ble_stopallcmd( BL_Data_TypeDef * hBL, UART_HandleTypeDef * hUART, char * b
 	HAL_UART_Transmit( hUART, (uint8_t *)&buff[0], 5 , 20 ) ;
 	
 	// Discard all responses/events that should came in a few ms
-	while ( (HAL_GetTick() - tick) <= 150 ) {;}
+	while ( (HAL_GetTick() - tick) <= 250 ) {;}
 	
 		
 	// Reset status in BL structure

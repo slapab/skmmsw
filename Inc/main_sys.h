@@ -82,6 +82,8 @@ typedef enum bl_hf_error_code {
 	BLR_GATT_REQ_PENDING=12,
 	/* STOP BLUETOOTH AT - ERROR CODE */
 	
+	BL_NO_ERRRORS,
+	
 	BL_CONNECT_HANDLE_ERR,			/// Error when tried to read connection handle
 	BL_CONNECT_ADDR_ERR,				/// Error when tried to read address of connected device
 	/*  to do */
@@ -94,10 +96,11 @@ typedef enum bl_hf_status {
 	BL_RESPONSE_OK,
 	BL_RESPONSE_ERR,
 	
-	BL_EV_CONNECT,
+	BL_EV_CONNECT,				/// If set means that other device has been connected to module
+	BL_EV_DISCONNECT,			/// Indicates that received disconnect event
 	BL_EV_DONE,
-	
-	LIB_HF_ERR,						// this is library internal error - is set if it occur in one of bl_hf_xxxx() functions
+
+	LIB_HF_ERR,						/// This is library internal error - is set if it occur in one of bl_hf_xxxx() functions
 	BL_VAL_CHANGED,
 	BL_VAL_READ
 	/* to do */
@@ -120,6 +123,15 @@ typedef struct bluetooth_data_typedef {
 	
 } BL_Data_TypeDef;
 
+
+typedef enum sys_conn_TypeDef {
+	DISCONNECTED, 
+	CONNECTED,
+	/// Indicates when module is connected and characteristic
+	/// from device was identified succesfully
+	CONNECTED_WITH_DATA 
+	
+} SYS_CONN_TypeDef ;
 
 #ifdef __cplusplus
 }

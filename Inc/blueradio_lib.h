@@ -53,7 +53,7 @@ int32_t bl_buffer_clearStatus( BLR_buff_TypeDef * hBL );
 int32_t bl_chngStatBuff( BLR_buff_TypeDef * hBL ) ; 		// Must be called in UART RX callbacks after when buffer was read
 void bl_checkEvents( BLR_buff_TypeDef * hBL, void * fh_param ) ;
 
-void bl_advertUpdate( BL_Data_TypeDef * hBL, UART_HandleTypeDef * hUART ) ;
+uint32_t bl_advertUpdate( BL_Data_TypeDef * hBL, UART_HandleTypeDef * hUART ) ;
 hf_stat_TypeDef bl_advertisingON(
 			BL_Data_TypeDef * hBL,
 			UART_HandleTypeDef * hUART,
