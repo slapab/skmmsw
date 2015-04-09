@@ -1,9 +1,11 @@
 #include "GUI.h"
 #include "DIALOG.h"
+#include "main_sys.h"
+#include "stdio.h"
 
 #define X_GAP 5
 
-void LCD_MainTask(void) {
+void LCD_MainTask(BL_Data_TypeDef data) {
 	GUI_Clear();
   GUI_SetFont(&GUI_Font24_1);
   GUI_DispStringAt("Stacja pogodowa", LCD_GetXSize()/2 - 80 , 0);

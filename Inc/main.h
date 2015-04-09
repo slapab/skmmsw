@@ -37,7 +37,7 @@
 #include "stm32f429i_discovery.h"
 #include "stm32f429i_discovery_ts.h"
 #include "stm32f429i_discovery_sdram.h"
-#include "..\Components\ili9341\ili9341.h" 
+#include "ili9341.h" 
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/

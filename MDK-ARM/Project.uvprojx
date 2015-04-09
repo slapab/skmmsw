@@ -416,6 +416,61 @@
           </Files>
         </Group>
         <Group>
+          <GroupName>Application/Bluetooth</GroupName>
+          <Files>
+            <File>
+              <FileName>blueradio_fh_lib.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\blueradio_fh_lib.c</FilePath>
+            </File>
+            <File>
+              <FileName>blueradio_lib.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\blueradio_lib.c</FilePath>
+            </File>
+            <File>
+              <FileName>gpio.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\gpio.c</FilePath>
+            </File>
+            <File>
+              <FileName>hal_i2c_callbacks.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\hal_i2c_callbacks.c</FilePath>
+            </File>
+            <File>
+              <FileName>hal_uart_callbacks.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\hal_uart_callbacks.c</FilePath>
+            </File>
+            <File>
+              <FileName>i2c.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\i2c.c</FilePath>
+            </File>
+            <File>
+              <FileName>ITM_Retarget.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\ITM_Retarget.c</FilePath>
+            </File>
+            <File>
+              <FileName>mpl3115_lib.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\mpl3115_lib.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f4xx_hal_msp.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\stm32f4xx_hal_msp.c</FilePath>
+            </File>
+            <File>
+              <FileName>usart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\usart.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
           <GroupName>Application/User</GroupName>
           <Files>
             <File>
@@ -444,19 +499,9 @@
               <FilePath>..\Drivers\BSP\Components\ili9341\ili9341.c</FilePath>
             </File>
             <File>
-              <FileName>ili9341.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\Drivers\BSP\Components\ili9341\ili9341.h</FilePath>
-            </File>
-            <File>
               <FileName>stmpe811.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Drivers\BSP\Components\stmpe811\stmpe811.c</FilePath>
-            </File>
-            <File>
-              <FileName>stmpe811.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\Drivers\BSP\Components\stmpe811\stmpe811.h</FilePath>
             </File>
           </Files>
         </Group>
@@ -469,19 +514,9 @@
               <FilePath>..\Drivers\BSP\STM32F429I-Discovery\stm32f429i_discovery.c</FilePath>
             </File>
             <File>
-              <FileName>stm32f429i_discovery.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\Drivers\BSP\STM32F429I-Discovery\stm32f429i_discovery.h</FilePath>
-            </File>
-            <File>
               <FileName>stm32f429i_discovery_io.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Drivers\BSP\STM32F429I-Discovery\stm32f429i_discovery_io.c</FilePath>
-            </File>
-            <File>
-              <FileName>stm32f429i_discovery_io.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\Drivers\BSP\STM32F429I-Discovery\stm32f429i_discovery_io.h</FilePath>
             </File>
             <File>
               <FileName>stm32f429i_discovery_lcd.c</FileName>
@@ -489,29 +524,14 @@
               <FilePath>..\Drivers\BSP\STM32F429I-Discovery\stm32f429i_discovery_lcd.c</FilePath>
             </File>
             <File>
-              <FileName>stm32f429i_discovery_lcd.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\Drivers\BSP\STM32F429I-Discovery\stm32f429i_discovery_lcd.h</FilePath>
-            </File>
-            <File>
               <FileName>stm32f429i_discovery_sdram.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Drivers\BSP\STM32F429I-Discovery\stm32f429i_discovery_sdram.c</FilePath>
             </File>
             <File>
-              <FileName>stm32f429i_discovery_sdram.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\Drivers\BSP\STM32F429I-Discovery\stm32f429i_discovery_sdram.h</FilePath>
-            </File>
-            <File>
               <FileName>stm32f429i_discovery_ts.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Drivers\BSP\STM32F429I-Discovery\stm32f429i_discovery_ts.c</FilePath>
-            </File>
-            <File>
-              <FileName>stm32f429i_discovery_ts.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\Drivers\BSP\STM32F429I-Discovery\stm32f429i_discovery_ts.h</FilePath>
             </File>
           </Files>
         </Group>

@@ -29,7 +29,11 @@
 #include "stm32f4xx_hal.h"
 #include "main.h"
 #include "stm32f4xx_it.h"
+#include "stm32f4xx.h"
 #include "GUI.h"
+#include "usart.h"
+#include "i2c.h"
+#include "main_sys.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -37,7 +41,10 @@
 /* Private variables ---------------------------------------------------------*/
 extern volatile GUI_TIMER_TIME OS_TimeMS;
 extern LTDC_HandleTypeDef hltdc;
+extern I2C_HandleTypeDef hi2c3;
+extern UART_HandleTypeDef huart5;
 
+extern struct time_sens_TypeDef sensors_timing;
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 
@@ -124,9 +131,11 @@ void SysTick_Handler(void)
 {
   /* Update the LocalTime by adding 1 ms each SysTick interrupt */
   HAL_IncTick();
-  
+  HAL_SYSTICK_IRQHandler();
   OS_TimeMS++;
+  ++sensors_timing.timer_sensors;
 }
+
 
 /******************************************************************************/
 /*                 STM32F4xx Peripherals Interrupt Handlers                   */
@@ -160,4 +169,24 @@ void LTDC_IRQHandler(void)
   HAL_LTDC_IRQHandler(&hltdc);
 }
 
+void UART5_IRQHandler(void)
+{
+
+	//HAL_UART_IRQHandler(&huart5); 
+	HAL_UART_IRQHandler_mod(&huart5);
+
+	// Obsluzyc odebrane dane
+	// usart_readCharacter(&huart5, huart5.Instance->DR) ;
+}
+
+
+
+
+void I2C3_EV_IRQHandler(void) {
+	HAL_I2C_EV_IRQHandler(&hi2c3);
+}
+
+void I2C3_ER_IRQHandler(void) {
+	HAL_I2C_ER_IRQHandler(&hi2c3);
+}
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
