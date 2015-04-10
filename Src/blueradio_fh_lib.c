@@ -210,7 +210,16 @@ static void bl_fh_PK_DIS( void *_hBL, const char * str ) { return; }
 /* BLUETOOTH LE EVENTS */
 static void	bl_fh_SCCPS( void *_hBL, const char * str ) { return; }
 static void	bl_fh_CPU( void *_hBL, const char * str ) { return; }
-static void	bl_fh_GATT_DONE( void *_hBL, const char * str ) { return; }
+
+static void	bl_fh_GATT_DONE( void *_hBL, const char * str ) {
+	
+	((BL_Data_TypeDef *)_hBL)->status = BL_EV_GATT_DONE ;
+	
+	PRINTF("BL_FH_GATT_DONE", 0 );
+	
+	return;
+}
+
 static void	bl_fh_GATT_DPS( void *_hBL, const char * str ) { return; }
 static void	bl_fh_GATT_DC( void *_hBL, const char * str ) { return; }
 static void	bl_fh_GATT_DCD( void *_hBL, const char * str ) { return; }

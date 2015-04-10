@@ -498,6 +498,37 @@ hf_stat_TypeDef bl_advertisingON(
 
 
 
+uint32_t bl_getCharacteristic( BL_Data_TypeDef * hBL, UART_HandleTypeDef * hUART ) {
+	
+	const size_t ch_no = 3;
+	const char uuid[ch_no][5] = { "1203", "31B0", "813B" }; // store well known uuid of characteristics
+	char bl_cmd[15] = "ATGDCU,0";
+	size_t i ;
+	
+	//Na razie zakladam connection handle na 0
+	// snpritf(&bl_cmd[8],2 "%d", ) ;
+	
+	for( i = 0 ; i < ch_no ; ++i ) {
+		
+		// Send command to module
+		// Reset status in BL structure
+		hBL->status = BL_NOACTION ;
+		// Send command to module 
+		//HAL_UART_Transmit( hUART, (uint8_t *)&buff[0], 7 , 25 ) ;
+		
+		
+		// Wait for response from bluetooth module until task will be ended
+		do {
+			bl_checkEvents( &blr_buffers, hBL ) ;
+		} while( hBL->status != BL_EV_GATT_DONE ) ;
+		
+	}
+	
+}
+
+
+
+
 /** Disables ALL running commands in bluetooth module
 *	
 *		Should be used if you try to change some settings in module

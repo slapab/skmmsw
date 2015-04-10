@@ -99,6 +99,8 @@ typedef enum bl_hf_status {
 	BL_EV_CONNECT,				/// If set means that other device has been connected to module
 	BL_EV_DISCONNECT,			/// Indicates that received disconnect event
 	BL_EV_DONE,
+	BL_EV_GATT_DC,				/// When ch-stic was found
+	BL_EV_GATT_DONE,			/// Send after GATT task in module was ended
 
 	LIB_HF_ERR,						/// This is library internal error - is set if it occur in one of bl_hf_xxxx() functions
 	BL_VAL_CHANGED,
