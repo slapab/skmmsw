@@ -209,7 +209,80 @@ static void	bl_fh_DISCONNECT( void *_hBL, const char * str ) {
 	
 	return;
 }
-static void	bl_fh_DISCOVERY( void *_hBL, const char * str ) { return; }
+
+static void	bl_fh_DISCOVERY( void *_hBL, const char * str ) {
+	
+	// 2,589A1A0D54BD,3,-48,2,02011A-080974656C65666F6E
+	
+	uint32_t ix = 0;
+	
+	uint32_t j ;
+	
+	uint8_t type ; // advertisement or scan response data
+	
+	//get type of that event
+	bl_split_data( &str[ix], (char*)&out_data[0], 12 ) ;
+	type = out_data[0] - 0x30 ;
+	
+	if ( type == 6 ) {
+		// for now not necessary
+	} // scan response data 
+	else if ( type >= 2 ) {
+
+		// get index char placed at the last ','
+		for ( i = 0 ; i < 5 ; ++i ) {
+			fh_run_ret = bl_split_data( &str[ix], (char*)&out_data[0], 20 ) ;
+			ix += fh_run_ret + 1 ;
+			
+			// get rssi value:
+			if ( i == 2 ) {
+				// copy chars to proper place in structure
+				for ( j = ix ; str[j] != ',' ; ++j ) {
+					((BL_Data_TypeDef *)_hBL)->remote_data.rssi[j-ix] = str[j] ;
+				}
+				((BL_Data_TypeDef *)_hBL)->remote_data.rssi[j-ix] = '\0' ;
+				
+				/* FOR NUMERIC VALUE CONVERSION
+				fh_run_ret = bl_split_data( &str[ix + 1], (char*)&out_data[0], 5 ) ;
+				if ( fh_run_ret == 1 ) {
+					rssi = str[ix+1] - 0x30 ;
+				}
+				else if ( fh_run_ret == 2 ) {
+					rssi += (str[ix+1] - 0x30)*10 ;
+					rssi += str[ix+2] - 0x30 ;
+				} 
+				else if ( fh_run_ret == 3 ) {
+					rssi = (str[ix+1] - 0x30)*100 ;
+					rssi = (str[ix+2] - 0x30)*10 ;
+					rssi += str[ix+3] - 0x30 ;
+				}
+				
+				
+				if( str[ix] == '-' ) {
+					rssi = -rssi ;
+				} // negative value
+				*/
+			} // Get RSSI value
+			
+		}
+		// ix - points after last ','
+		
+		// read until '-' met
+		for ( i = ix ; '-' != str[i] ; ++i ) {;}
+		ix = i + 5 ; // ix pints at 5'th element after '-'
+		
+		// from ix are valid data
+		// to do - convert data
+		
+	} // Advertisement data
+	
+	
+	
+	
+	PRINTFSTR( str ) ;
+	return;
+}
+
 static void	bl_fh_PAIR_REQ( void *_hBL, const char * str ) { return; }
 static void	bl_fh_PAIRED( void *_hBL, const char * str ) { return; }
 static void	bl_fh_PAIR_FAIL( void *_hBL, const char * str ) { return; }

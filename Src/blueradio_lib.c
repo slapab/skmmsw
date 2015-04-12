@@ -415,6 +415,7 @@ uint32_t bl_advertUpdate( BL_Data_TypeDef * hBL, UART_HandleTypeDef * hUART ) {
 	
 	// Reset status in BL structure
 	hBL->status = BL_NOACTION ;
+	advert_cmd[9] = '1'; 							// response data not advertising
 	// Send command to module 
 	HAL_UART_Transmit( hUART, (uint8_t *)&advert_cmd[0], 42 , 25 ) ;
 	
@@ -479,7 +480,7 @@ hf_stat_TypeDef bl_advertisingON(
 	// Wait for response from bluetooth module
 	do {
 		bl_checkEvents( &blr_buffers, hBL ) ;
-	} while( (hBL->status == BL_NOACTION) && ((HAL_GetTick() - tick) <= 100 ) ) ;
+	} while( (hBL->status == BL_NOACTION) && ((HAL_GetTick() - tick) <= 300 ) ) ;
 
 	if ( hBL->status == BL_NOACTION ) {
 		return BL_TIMEOUT ;
@@ -727,7 +728,7 @@ void ble_stopallcmd( BL_Data_TypeDef * hBL, UART_HandleTypeDef * hUART, char * b
 	hBL->status = BL_NOACTION ;
 	
 	// Clear current bluetooth UART buffers status - and get index of reserved buffer
-	ix = bl_buffer_clearStatus( &blr_buffers );
+	ix = bl_buffer_clearStatus( &blr_buffers ) ;
 	// Restart UART RX IT function:
 	HAL_UART_Receive_IT(hUART, (uint8_t*)blr_buffers.buff[ix], BLR_STRUCT_BUFF_SIZE ); // start waiting for data
 	

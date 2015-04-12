@@ -22,14 +22,6 @@
 #define BL_CHAR_LEN (BL_UUID_SIZE+1) /// 32-chars for characteristic UUID + \0 character
 #define BL_CHAR_NO 3	/// number of characteristics to read
 	 
-	 
-/* dla advertisingu z dwoch stron - slabe rozwiazanie ale ostatecznosc */
-
-struct sys_task_TypeDef {
-	uint32_t tim ;				/// counting time ( currently task )
-	uint8_t task ;				/// Inform about currently turned on task
-	uint8_t started ;			/// If 0 then need to start proper options in bluetooth module
-};
 
 
 struct time_sens_TypeDef {
@@ -55,11 +47,12 @@ typedef struct remote_weather_typedef {
 	volatile char date[11] ; 							/// date for that weather data, e.g. 23.07.2015 - null terminated
 	volatile char time[6] ;								/// time for that weather data, e.g. 13:00
 	
-	volatile uint_fast8_t temp ;						/// only total part of value
+	volatile uint_fast8_t temp ;					/// only total part of value
 	volatile uint_fast16_t pressure ;			/// atmospheric pressure in [hPa]
 	volatile uint_fast8_t humidity ; 			/// in %
 	volatile uint_fast8_t ch_rain ;				/// chece of rain in %
 	
+	volatile char rssi[5] ;								/// rssi value -127 to +20 - \0 terminated
 } weather_TypeDef ;
 
 
@@ -74,8 +67,8 @@ typedef struct bluetooth_connection_typedef {
 	volatile uint16_t char_attr_h[10][6] ; 	/// characteristic value attribute handle must be string ( \0 terminate )
 	volatile const char char_uuid[BL_CHAR_NO][BL_CHAR_LEN] ;			/// uuids of characteristic
 	
-	// Descirptors of characteristic: 
-	volatile 	uint_fast16_t char_descr_h[10] ;		/// characteristic descriptor attribute handle
+	// Descirptors of characteristic:
+	volatile 	uint_fast16_t char_descr_h[10] ;	 /// characteristic descriptor attribute handle
 	volatile uint_fast16_t char_descr_uudi[10] ; /// uuid of the characteristic descriptor
 		
 } blueConn_TypeDef ;
