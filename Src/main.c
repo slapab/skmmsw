@@ -26,8 +26,11 @@ extern BLR_buff_TypeDef blr_buffers ;		// Bluetooth UART buffers stearing handle
 // buffers for Bluetooth UART data
 char bl_buff[BLR_STRUCT_BUFF_NO][BLR_STRUCT_BUFF_SIZE] ;	
 
-// SENSORS AND BLUETOOTH DATA
-BL_Data_TypeDef weather_data ;
+// SENSORS AND BLUETOOTH DATA - set UUIDs of characteristics
+BL_Data_TypeDef weather_data = { .conn.char_uuid[0] = "D3496D233DBF436BB7893967E9870EDB",
+																 .conn.char_uuid[1] = "D4496D233DBF436BB7893967E9870EDB",
+																 .conn.char_uuid[2] = "D5496D233DBF436BB7893967E9870EDB"
+															 };
 
 // Bluetooth connection status
 SYS_CONN_TypeDef conn_stat = DISCONNECTED ;
@@ -36,6 +39,11 @@ SYS_CONN_TypeDef conn_stat = DISCONNECTED ;
 struct time_sens_TypeDef sensors_timing = { .timer_sensors = 0,
 																						.is_converting = 0 } ;
 
+																						
+// rozwiazanie poprzez advertising z dwoch stron: 
+struct sys_task_TypeDef sys_tasks = {	.task = 1, 
+																			.started = 0
+																		} ;
 
 	int a = 0 ;
 	
@@ -175,16 +183,57 @@ int main(void)
   while (1)
   {
 		
+		/*
+		if ( sys_tasks.task == 1 ) {
+			
+			if ( sys_tasks.started == 0 ) {
+				// stop all running tasks
+				// turn on advertising
+				sys_tasks.started = 1;
+			} // Start functions in ble
+			
+			// check here events for that task
+			
+			
+			if ( sys_tasks.tim >= 5000 ) {
+				sys_tasks.tim = 0 ;
+				sys_tasks.task = 2 ;
+				sys_tasks.started = 0 ;
+			}
+		} // TASK 1 - advertising
+		else if ( sys_tasks.task == 2 ) {
+			if ( sys_tasks.started == 0 ) {
+				// stop all runnging tasks
+				// turn on discovery
+				sys_tasks.started = 1;
+			} // Start functions in ble
+			
+			// Check here events for that task
+			
+			
+			if ( sys_tasks.tim >= 5000 ) {
+				sys_tasks.tim = 0 ;
+				sys_tasks.task = 1 ;
+				sys_tasks.started = 0 ;
+			}
+		} // TASK 2 - discovery
+		*/
+		
 		// It has to be called becouse it is part of UART IT reading system
 		bl_checkEvents( &blr_buffers, &weather_data ) ;
 		
 		// Try to read handles for characteristics when connection
 		// was established
+		/*
 		if ( CONNECTED == conn_stat ) {
 			// Try read handles for characteristics
-			// if read was completed successfuly then set status as: 
-			// conn_stat = CONNECTED_WITH_DATA ;
+			utmp = bl_getCharacteristic( &weather_data, &huart5 ) ;
+			if ( utmp != 0 ) {
+				// Characteristic was discovered
+				conn_stat = CONNECTED_WITH_DATA ;
+			}
 		}
+		*/
 		
 		
 		// SENSORS ROUNTINE:

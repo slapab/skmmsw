@@ -13,6 +13,9 @@ extern UART_HandleTypeDef huart5;
 
 // in main.c
 extern struct time_sens_TypeDef sensors_timing ;
+// rozwiazanie poprzez advertising z dwoch stron: 
+extern struct sys_task_TypeDef sys_tasks ;
+
 
 /******************************************************************************/
 /*            Cortex-M4 Processor Interruption and Exception Handlers         */ 
@@ -30,6 +33,8 @@ void SysTick_Handler(void)
 	//Count interval for sensors reading
 	++sensors_timing.timer_sensors ;
 	
+	//ozwiazanie poprzez advertising z dwoch stron: 
+	++sys_tasks.tim ;
 }
 
 /**

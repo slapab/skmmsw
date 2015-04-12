@@ -9,13 +9,29 @@
 	// For debugging only
 	 #define _DEBUG_PRINTF_ 1
 	 #include <stdio.h>
-	 #define PRINTF(_txt_, _d_) printf("\n%s : %d\n", (_txt_), (_d_))
+	 #define PRINTF(_txt_, _d_) printf( "\n%s : %d\n", (_txt_), (_d_) )
+	 #define PRINTFSTR( _str_ ) printf( "%s\n", (_str_) )
 
 
 
 // in [ms] time between next two readings
 #define SENSORS_CHECK_TIME 5000
 	 
+
+#define BL_UUID_SIZE 32 /// how many chars( 4 or 32 ) UUID has
+#define BL_CHAR_LEN (BL_UUID_SIZE+1) /// 32-chars for characteristic UUID + \0 character
+#define BL_CHAR_NO 3	/// number of characteristics to read
+	 
+	 
+/* dla advertisingu z dwoch stron - slabe rozwiazanie ale ostatecznosc */
+
+struct sys_task_TypeDef {
+	uint32_t tim ;				/// counting time ( currently task )
+	uint8_t task ;				/// Inform about currently turned on task
+	uint8_t started ;			/// If 0 then need to start proper options in bluetooth module
+};
+
+
 struct time_sens_TypeDef {
 	uint32_t timer_sensors ;
 	uint32_t is_converting ;
@@ -50,13 +66,13 @@ typedef struct remote_weather_typedef {
 typedef struct bluetooth_connection_typedef {
 	
 	volatile char rem_mac[12] ;						/// connected remote mac address
-	volatile uint_fast8_t conn_handler ;		/// connection handler
+	volatile char conn_handler[3] ;				/// connection handler - \0 terminated
 	volatile uint_fast16_t srv_atr_h ; 		/// remote service attribute handle 
-	volatile uint_fast16_t srv_last_h ; 		/// attribute handle of the last attribute in the service
+	volatile uint_fast16_t srv_last_h ; 	/// attribute handle of the last attribute in the service
 	volatile uint_fast16_t srv_uuid ;			/// service UUID
 	
-	volatile uint_fast16_t char_attr_h[10] ; 	/// characteristic value attribute handle
-	volatile uint_fast16_t char_uuid[10] ;			/// uuid of the characteristic
+	volatile uint16_t char_attr_h[10][6] ; 	/// characteristic value attribute handle must be string ( \0 terminate )
+	volatile const char char_uuid[BL_CHAR_NO][BL_CHAR_LEN] ;			/// uuids of characteristic
 	
 	// Descirptors of characteristic: 
 	volatile 	uint_fast16_t char_descr_h[10] ;		/// characteristic descriptor attribute handle
@@ -103,6 +119,7 @@ typedef enum bl_hf_status {
 	BL_EV_GATT_DONE,			/// Send after GATT task in module was ended
 
 	LIB_HF_ERR,						/// This is library internal error - is set if it occur in one of bl_hf_xxxx() functions
+	BL_TIMEOUT, 					/// If not receive response durning window time
 	BL_VAL_CHANGED,
 	BL_VAL_READ
 	/* to do */
@@ -114,14 +131,17 @@ typedef struct bluetooth_data_typedef {
 	sensors_TypeDef local_data ;
 	weather_TypeDef remote_data ;
 	
-	volatile uint_fast8_t hours ;		/// Current hour - valid only when was bluetooth connection established
-	volatile uint_fast8_t min ;			/// Current minutes - valid only when was bluetooth connectio established
+	volatile uint8_t hours ;				/// Current hour - valid only when was bluetooth connection established
+	volatile uint8_t min ;					/// Current minutes - valid only when was bluetooth connectio established
 	
-	blueConn_TypeDef conn ;				/// Bluetooth connection parameters
+	blueConn_TypeDef conn ;					/// Bluetooth connection parameters
 	
 	volatile hf_stat_TypeDef status ;			/// The value is different than BL_NOACT if something was changed
 	/* to do, more info about status changed, e.g on which ch-stic handle are data changed */
 	volatile hf_err_TypeDef error ;				/// Error code/source
+	
+	volatile uint8_t ev_gatt_doneNO ;			/// Stores 'function' ended id ( e.g.  ATGDC )
+	volatile uint8_t ev_gatt_doneERR; 		/// Stores error returned by GATT_DONE event
 	
 } BL_Data_TypeDef;
 
