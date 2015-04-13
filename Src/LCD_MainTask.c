@@ -5,7 +5,7 @@
 
 #define X_GAP 5				// odleglosc od lewej krawedzi ekranu etykiet
 #define X_GAP1 130		// odleglosc od lewej krawedzi ekranu pomiarow
-#define TMP_SIZE 14		// rozmiar stringu przechowujacego pomiary
+#define TMP_SIZE 16		// rozmiar stringu przechowujacego pomiary
 #define CLRSTR(p) (snprintf((p), TMP_SIZE, ""))
 
 static char tmp[TMP_SIZE];
@@ -39,31 +39,31 @@ void LCD_MainTask(const BL_Data_TypeDef* const data) {
 	GUI_SetFont(&GUI_Font20_1);
 	
 	// date
-	snprintf(tmp, TMP_SIZE, "%s   ", data->remote_data.date);
+	snprintf(tmp, TMP_SIZE, "%s     ", data->remote_data.date);
 	GUI_DispStringAt(tmp, X_GAP1 , 30);
 	
 	// time
 	CLRSTR(tmp);
-	snprintf(tmp, TMP_SIZE, "%s   ", data->remote_data.time);
+	snprintf(tmp, TMP_SIZE, "%s     ", data->remote_data.time);
 	GUI_DispStringAt(tmp, X_GAP1 , 50);
 	
 	// temperature
 	CLRSTR(tmp);
-		snprintf(tmp, TMP_SIZE, "%u.%u C   ", data->local_data.temp_tot, data->local_data.temp_frac);
+		snprintf(tmp, TMP_SIZE, "%u.%u C     ", data->local_data.temp_tot, data->local_data.temp_frac);
   GUI_DispStringAt(tmp, X_GAP1 , 70);
 	
 	// pressure
 	CLRSTR(tmp);
-	snprintf(tmp, TMP_SIZE, "%u HPa   ", data->local_data.press_sea);
+	snprintf(tmp, TMP_SIZE, "%u HPa     ", data->local_data.press_sea);
 	GUI_DispStringAt(tmp, X_GAP1 , 90);
 	
 	// humidity
 	CLRSTR(tmp);
-	snprintf(tmp, TMP_SIZE, "%u%%   ", data->local_data.humidity);
+	snprintf(tmp, TMP_SIZE, "%u%%     ", data->local_data.humidity);
 	GUI_DispStringAt(tmp, X_GAP1 , 110);
 	
 	// CO2
 	CLRSTR(tmp);
-	snprintf(tmp, TMP_SIZE, "%u%%   ", data->local_data.humidity);
+	snprintf(tmp, TMP_SIZE, "%u%%     ", data->local_data.humidity);
 	GUI_DispStringAt(tmp, X_GAP1 , 130);
 }

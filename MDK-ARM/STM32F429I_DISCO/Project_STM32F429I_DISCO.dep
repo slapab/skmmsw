@@ -1,6 +1,6 @@
 Dependencies for Project 'Project', Target 'STM32F429I_DISCO': (DO NOT MODIFY !)
 F (startup_stm32f429xx.s)(0x55262694)(--cpu Cortex-M4.fp -g --apcs=interwork --pd "__MICROLIB SETA 1" -I..\Inc-I D:\OneDrive\Study\SKMMSW\LCD\MDK-ARM\RTE-I C:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.3.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-I C:\Keil_v5\ARM\CMSIS\Include--pd "__UVISION_VERSION SETA 514" --pd "STM32F429xx SETA 1"--list startup_stm32f429xx.lst --xref -o .\stm32f429i_disco\startup_stm32f429xx.o --depend .\stm32f429i_disco\startup_stm32f429xx.d)
-F (..\Src\blueradio_fh_lib.c)(0x552626DE)(-c --cpu Cortex-M4.fp -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I..\Drivers\STM32F429i_HAL_Driver\Inc -I..\Drivers\BSP\STM32F429I-Discovery -I..\Middlewares\STemWin\Config\inc -I..\Middlewares\STemWin\Lib -I..\Drivers\BSP\Components\Common -I..\Drivers\BSP\Components\ili9341 -I..\Drivers\BSP\Components\stmpe811 -I..\Drivers\CMSIS\Inc -I..\Utilities\Fonts -I..\Inc --C99-I D:\OneDrive\Study\SKMMSW\LCD\MDK-ARM\RTE-I C:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.3.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-I C:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="514" -DSTM32F429xx -DSTM32F429xx -DUSE_STM32F429I_DISCO-o .\stm32f429i_disco\blueradio_fh_lib.o --omf_browse .\stm32f429i_disco\blueradio_fh_lib.crf --depend .\stm32f429i_disco\blueradio_fh_lib.d)
+F (..\Src\blueradio_fh_lib.c)(0x552BB6E7)(-c --cpu Cortex-M4.fp -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I..\Drivers\STM32F429i_HAL_Driver\Inc -I..\Drivers\BSP\STM32F429I-Discovery -I..\Middlewares\STemWin\Config\inc -I..\Middlewares\STemWin\Lib -I..\Drivers\BSP\Components\Common -I..\Drivers\BSP\Components\ili9341 -I..\Drivers\BSP\Components\stmpe811 -I..\Drivers\CMSIS\Inc -I..\Utilities\Fonts -I..\Inc --C99-I D:\OneDrive\Study\SKMMSW\LCD\MDK-ARM\RTE-I C:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.3.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-I C:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="514" -DSTM32F429xx -DSTM32F429xx -DUSE_STM32F429I_DISCO-o .\stm32f429i_disco\blueradio_fh_lib.o --omf_browse .\stm32f429i_disco\blueradio_fh_lib.crf --depend .\stm32f429i_disco\blueradio_fh_lib.d)
 I (..\Inc\blueradio_fh_lib.h)(0x552626DE)
 I (C:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.3.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include\stm32f4xx.h)(0x53AC02CA)
 I (C:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.3.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include\stm32f429xx.h)(0x53AC02CA)
@@ -10,11 +10,11 @@ I (..\Drivers\CMSIS\Inc\core_cmInstr.h)(0x55262693)
 I (..\Drivers\CMSIS\Inc\core_cmFunc.h)(0x55262693)
 I (..\Drivers\CMSIS\Inc\core_cm4_simd.h)(0x55262693)
 I (C:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.3.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include\system_stm32f4xx.h)(0x53AC02CA)
-I (..\Inc\blueradio_lib.h)(0x552626DE)
+I (..\Inc\blueradio_lib.h)(0x552BBE52)
 I (C:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x54766380)
 I (C:\Keil_v5\ARM\ARMCC\include\signal.h)(0x5476636E)
 I (C:\Keil_v5\ARM\ARMCC\include\stdbool.h)(0x54766380)
-I (..\Inc\main_sys.h)(0x55263079)
+I (..\Inc\main_sys.h)(0x552BB6E7)
 I (..\Drivers\STM32F429i_HAL_Driver\Inc\stm32f4xx_hal.h)(0x55262693)
 I (..\Inc\stm32f4xx_hal_conf.h)(0x55262693)
 I (..\Drivers\STM32F429i_HAL_Driver\Inc\stm32f4xx_hal_rcc.h)(0x55262693)
@@ -43,8 +43,8 @@ I (..\Drivers\STM32F429i_HAL_Driver\Inc\stm32f4xx_hal_spi.h)(0x55262693)
 I (..\Drivers\STM32F429i_HAL_Driver\Inc\stm32f4xx_hal_uart.h)(0x552626DE)
 I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x54766380)
 I (C:\Keil_v5\ARM\ARMCC\include\string.h)(0x54766380)
-F (..\Src\blueradio_lib.c)(0x552626DE)(-c --cpu Cortex-M4.fp -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I..\Drivers\STM32F429i_HAL_Driver\Inc -I..\Drivers\BSP\STM32F429I-Discovery -I..\Middlewares\STemWin\Config\inc -I..\Middlewares\STemWin\Lib -I..\Drivers\BSP\Components\Common -I..\Drivers\BSP\Components\ili9341 -I..\Drivers\BSP\Components\stmpe811 -I..\Drivers\CMSIS\Inc -I..\Utilities\Fonts -I..\Inc --C99-I D:\OneDrive\Study\SKMMSW\LCD\MDK-ARM\RTE-I C:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.3.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-I C:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="514" -DSTM32F429xx -DSTM32F429xx -DUSE_STM32F429I_DISCO-o .\stm32f429i_disco\blueradio_lib.o --omf_browse .\stm32f429i_disco\blueradio_lib.crf --depend .\stm32f429i_disco\blueradio_lib.d)
-I (..\Inc\blueradio_lib.h)(0x552626DE)
+F (..\Src\blueradio_lib.c)(0x552BB6E7)(-c --cpu Cortex-M4.fp -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I..\Drivers\STM32F429i_HAL_Driver\Inc -I..\Drivers\BSP\STM32F429I-Discovery -I..\Middlewares\STemWin\Config\inc -I..\Middlewares\STemWin\Lib -I..\Drivers\BSP\Components\Common -I..\Drivers\BSP\Components\ili9341 -I..\Drivers\BSP\Components\stmpe811 -I..\Drivers\CMSIS\Inc -I..\Utilities\Fonts -I..\Inc --C99-I D:\OneDrive\Study\SKMMSW\LCD\MDK-ARM\RTE-I C:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.3.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-I C:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="514" -DSTM32F429xx -DSTM32F429xx -DUSE_STM32F429I_DISCO-o .\stm32f429i_disco\blueradio_lib.o --omf_browse .\stm32f429i_disco\blueradio_lib.crf --depend .\stm32f429i_disco\blueradio_lib.d)
+I (..\Inc\blueradio_lib.h)(0x552BBE52)
 I (C:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.3.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include\stm32f4xx.h)(0x53AC02CA)
 I (C:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.3.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include\stm32f429xx.h)(0x53AC02CA)
 I (..\Drivers\CMSIS\Inc\core_cm4.h)(0x55262693)
@@ -56,7 +56,7 @@ I (C:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.3.0\Drivers\CMSIS\Device\ST\STM32F4x
 I (C:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x54766380)
 I (C:\Keil_v5\ARM\ARMCC\include\signal.h)(0x5476636E)
 I (C:\Keil_v5\ARM\ARMCC\include\stdbool.h)(0x54766380)
-I (..\Inc\main_sys.h)(0x55263079)
+I (..\Inc\main_sys.h)(0x552BB6E7)
 I (..\Drivers\STM32F429i_HAL_Driver\Inc\stm32f4xx_hal.h)(0x55262693)
 I (..\Inc\stm32f4xx_hal_conf.h)(0x55262693)
 I (..\Drivers\STM32F429i_HAL_Driver\Inc\stm32f4xx_hal_rcc.h)(0x55262693)
@@ -169,11 +169,11 @@ I (..\Drivers\CMSIS\Inc\core_cmFunc.h)(0x55262693)
 I (..\Drivers\CMSIS\Inc\core_cm4_simd.h)(0x55262693)
 I (C:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.3.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include\system_stm32f4xx.h)(0x53AC02CA)
 I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x54766380)
-I (..\Inc\blueradio_lib.h)(0x552626DE)
+I (..\Inc\blueradio_lib.h)(0x552BBE52)
 I (C:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x54766380)
 I (C:\Keil_v5\ARM\ARMCC\include\signal.h)(0x5476636E)
 I (C:\Keil_v5\ARM\ARMCC\include\stdbool.h)(0x54766380)
-I (..\Inc\main_sys.h)(0x55263079)
+I (..\Inc\main_sys.h)(0x552BB6E7)
 I (..\Drivers\STM32F429i_HAL_Driver\Inc\stm32f4xx_hal.h)(0x55262693)
 I (..\Inc\stm32f4xx_hal_conf.h)(0x55262693)
 I (..\Drivers\STM32F429i_HAL_Driver\Inc\stm32f4xx_hal_rcc.h)(0x55262693)
@@ -309,7 +309,7 @@ I (..\Drivers\STM32F429i_HAL_Driver\Inc\stm32f4xx_hal_spi.h)(0x55262693)
 I (..\Drivers\STM32F429i_HAL_Driver\Inc\stm32f4xx_hal_uart.h)(0x552626DE)
 I (..\Inc\mpl3115_lib.h)(0x552626DE)
 I (C:\Keil_v5\ARM\ARMCC\include\math.h)(0x5476637E)
-I (..\Inc\main_sys.h)(0x55263079)
+I (..\Inc\main_sys.h)(0x552BB6E7)
 I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x54766380)
 F (..\Src\stm32f4xx_hal_msp.c)(0x552626DE)(-c --cpu Cortex-M4.fp -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I..\Drivers\STM32F429i_HAL_Driver\Inc -I..\Drivers\BSP\STM32F429I-Discovery -I..\Middlewares\STemWin\Config\inc -I..\Middlewares\STemWin\Lib -I..\Drivers\BSP\Components\Common -I..\Drivers\BSP\Components\ili9341 -I..\Drivers\BSP\Components\stmpe811 -I..\Drivers\CMSIS\Inc -I..\Utilities\Fonts -I..\Inc --C99-I D:\OneDrive\Study\SKMMSW\LCD\MDK-ARM\RTE-I C:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.3.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-I C:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="514" -DSTM32F429xx -DSTM32F429xx -DUSE_STM32F429I_DISCO-o .\stm32f429i_disco\stm32f4xx_hal_msp.o --omf_browse .\stm32f429i_disco\stm32f4xx_hal_msp.crf --depend .\stm32f429i_disco\stm32f4xx_hal_msp.d)
 I (..\Drivers\STM32F429i_HAL_Driver\Inc\stm32f4xx_hal.h)(0x55262693)
@@ -385,7 +385,7 @@ I (..\Drivers\STM32F429i_HAL_Driver\Inc\stm32f4xx_hal_uart.h)(0x552626DE)
 I (C:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x54766380)
 I (..\Inc\gpio.h)(0x552626DE)
 I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x54766380)
-F (..\Src\main.c)(0x552BB668)(-c --cpu Cortex-M4.fp -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I..\Drivers\STM32F429i_HAL_Driver\Inc -I..\Drivers\BSP\STM32F429I-Discovery -I..\Middlewares\STemWin\Config\inc -I..\Middlewares\STemWin\Lib -I..\Drivers\BSP\Components\Common -I..\Drivers\BSP\Components\ili9341 -I..\Drivers\BSP\Components\stmpe811 -I..\Drivers\CMSIS\Inc -I..\Utilities\Fonts -I..\Inc --C99-I D:\OneDrive\Study\SKMMSW\LCD\MDK-ARM\RTE-I C:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.3.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-I C:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="514" -DSTM32F429xx -DSTM32F429xx -DUSE_STM32F429I_DISCO-o .\stm32f429i_disco\main.o --omf_browse .\stm32f429i_disco\main.crf --depend .\stm32f429i_disco\main.d)
+F (..\Src\main.c)(0x552BBCD3)(-c --cpu Cortex-M4.fp -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I..\Drivers\STM32F429i_HAL_Driver\Inc -I..\Drivers\BSP\STM32F429I-Discovery -I..\Middlewares\STemWin\Config\inc -I..\Middlewares\STemWin\Lib -I..\Drivers\BSP\Components\Common -I..\Drivers\BSP\Components\ili9341 -I..\Drivers\BSP\Components\stmpe811 -I..\Drivers\CMSIS\Inc -I..\Utilities\Fonts -I..\Inc --C99-I D:\OneDrive\Study\SKMMSW\LCD\MDK-ARM\RTE-I C:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.3.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-I C:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="514" -DSTM32F429xx -DSTM32F429xx -DUSE_STM32F429I_DISCO-o .\stm32f429i_disco\main.o --omf_browse .\stm32f429i_disco\main.crf --depend .\stm32f429i_disco\main.d)
 I (..\Inc\main.h)(0x55262A58)
 I (..\Drivers\STM32F429i_HAL_Driver\Inc\stm32f4xx_hal.h)(0x55262693)
 I (..\Inc\stm32f4xx_hal_conf.h)(0x55262693)
@@ -445,8 +445,8 @@ I (..\Inc\i2c.h)(0x552626DE)
 I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x54766380)
 I (C:\Keil_v5\ARM\ARMCC\include\string.h)(0x54766380)
 I (..\Inc\mpl3115_lib.h)(0x552626DE)
-I (..\Inc\main_sys.h)(0x55263079)
-I (..\Inc\blueradio_lib.h)(0x552626DE)
+I (..\Inc\main_sys.h)(0x552BB6E7)
+I (..\Inc\blueradio_lib.h)(0x552BBE52)
 I (C:\Keil_v5\ARM\ARMCC\include\signal.h)(0x5476636E)
 I (C:\Keil_v5\ARM\ARMCC\include\stdbool.h)(0x54766380)
 F (..\Src\stm32f4xx_it.c)(0x55262A03)(-c --cpu Cortex-M4.fp -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I..\Drivers\STM32F429i_HAL_Driver\Inc -I..\Drivers\BSP\STM32F429I-Discovery -I..\Middlewares\STemWin\Config\inc -I..\Middlewares\STemWin\Lib -I..\Drivers\BSP\Components\Common -I..\Drivers\BSP\Components\ili9341 -I..\Drivers\BSP\Components\stmpe811 -I..\Drivers\CMSIS\Inc -I..\Utilities\Fonts -I..\Inc --C99-I D:\OneDrive\Study\SKMMSW\LCD\MDK-ARM\RTE-I C:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.3.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-I C:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="514" -DSTM32F429xx -DSTM32F429xx -DUSE_STM32F429I_DISCO-o .\stm32f429i_disco\stm32f4xx_it.o --omf_browse .\stm32f429i_disco\stm32f4xx_it.crf --depend .\stm32f429i_disco\stm32f4xx_it.d)
@@ -504,9 +504,9 @@ I (..\Inc\stm32f4xx_it.h)(0x5526283F)
 I (..\Inc\usart.h)(0x552626DE)
 I (C:\Keil_v5\ARM\ARMCC\include\stddef.h)(0x54766380)
 I (..\Inc\i2c.h)(0x552626DE)
-I (..\Inc\main_sys.h)(0x55263079)
+I (..\Inc\main_sys.h)(0x552BB6E7)
 I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x54766380)
-F (..\Src\LCD_MainTask.c)(0x552BBA41)(-c --cpu Cortex-M4.fp -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I..\Drivers\STM32F429i_HAL_Driver\Inc -I..\Drivers\BSP\STM32F429I-Discovery -I..\Middlewares\STemWin\Config\inc -I..\Middlewares\STemWin\Lib -I..\Drivers\BSP\Components\Common -I..\Drivers\BSP\Components\ili9341 -I..\Drivers\BSP\Components\stmpe811 -I..\Drivers\CMSIS\Inc -I..\Utilities\Fonts -I..\Inc --C99-I D:\OneDrive\Study\SKMMSW\LCD\MDK-ARM\RTE-I C:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.3.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-I C:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="514" -DSTM32F429xx -DSTM32F429xx -DUSE_STM32F429I_DISCO-o .\stm32f429i_disco\lcd_maintask.o --omf_browse .\stm32f429i_disco\lcd_maintask.crf --depend .\stm32f429i_disco\lcd_maintask.d)
+F (..\Src\LCD_MainTask.c)(0x552BBE9E)(-c --cpu Cortex-M4.fp -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I..\Drivers\STM32F429i_HAL_Driver\Inc -I..\Drivers\BSP\STM32F429I-Discovery -I..\Middlewares\STemWin\Config\inc -I..\Middlewares\STemWin\Lib -I..\Drivers\BSP\Components\Common -I..\Drivers\BSP\Components\ili9341 -I..\Drivers\BSP\Components\stmpe811 -I..\Drivers\CMSIS\Inc -I..\Utilities\Fonts -I..\Inc --C99-I D:\OneDrive\Study\SKMMSW\LCD\MDK-ARM\RTE-I C:\Keil_v5\ARM\PACK\Keil\STM32F4xx_DFP\2.3.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-I C:\Keil_v5\ARM\CMSIS\Include-D__UVISION_VERSION="514" -DSTM32F429xx -DSTM32F429xx -DUSE_STM32F429I_DISCO-o .\stm32f429i_disco\lcd_maintask.o --omf_browse .\stm32f429i_disco\lcd_maintask.crf --depend .\stm32f429i_disco\lcd_maintask.d)
 I (..\Middlewares\STemWin\Config\inc\GUI.h)(0x55262694)
 I (..\Middlewares\STemWin\Config\inc\GUI_ConfDefaults.h)(0x55262694)
 I (..\Middlewares\STemWin\Config\inc\GUIConf.h)(0x55262694)
@@ -550,7 +550,7 @@ I (..\Middlewares\STemWin\Config\inc\SPINBOX.h)(0x55262694)
 I (..\Middlewares\STemWin\Config\inc\TEXT.h)(0x55262694)
 I (..\Middlewares\STemWin\Config\inc\TREEVIEW.h)(0x55262694)
 I (..\Middlewares\STemWin\Config\inc\KNOB.h)(0x55262694)
-I (..\Inc\main_sys.h)(0x55263079)
+I (..\Inc\main_sys.h)(0x552BB6E7)
 I (..\Drivers\STM32F429i_HAL_Driver\Inc\stm32f4xx_hal.h)(0x55262693)
 I (..\Inc\stm32f4xx_hal_conf.h)(0x55262693)
 I (..\Drivers\STM32F429i_HAL_Driver\Inc\stm32f4xx_hal_rcc.h)(0x55262693)

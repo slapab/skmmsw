@@ -4,10 +4,6 @@
 
 #include "blueradio_fh_lib.h"
 
-	 // For debugging only
-	 #include <stdio.h>
-	 #define PRINTF(_txt_, _d_) printf("\n%s : %d\n", (_txt_), (_d_))
-
 
 BLR_buff_TypeDef blr_buffers ;
 
@@ -113,7 +109,16 @@ int32_t bl_buffers_reserve( BLR_buff_TypeDef * hBL ) {
 }
 
 
-/**
+/**	That function must be called on each place where program goes to
+*		'infinite' loop for long time.
+*		Checks if there is any of bluetooth UART buffer which contain data to handle.
+*		It's parsing data and is trying to get proper action depending on received
+*		event / response string. After that it frees buffer and trying reserve new
+*		one - but not the same - the buffer which index is as close to 0 as possible.
+*		
+*		@param hBL pointer to @ref BLR_buff_TypeDef structure
+*		@param fh_param pointer to data which will be passed to event/response handle 
+*		functions - check for functions in blueradio_lib.c/.h files and @ref bl_handleResp()
 *		
 *	 	@warning macro: BLR_STRUCT_BUFF_NO must have the same value as number
 *		of used buffers for storing UART data
@@ -237,8 +242,17 @@ int32_t bl_chngStatBuff( BLR_buff_TypeDef * hBL ) {
 
 
 
-/**
-*
+/**	Use this function to analyze AT format ascii bytes which has been
+*		just received from bluetooth. 
+*		@warning This function only parsing that bytes for matching event/response
+*		to proper handle function. The Developer must implement that functions - see
+*		bluetooth_fh_lib.c/.h files.
+*		
+*		@param _hBL pointer to data which will be passed to proper event/response
+*		handle function
+*		@param src pointer to bytes table (AT format) that have been received from bluetooth
+*		@retval 0 when event was handled properly
+*		@rerval other check functions: @ref get_resp_name(), @ref match_rsp()
 */
 int_fast8_t bl_handleResp( void * _hBL, const char * src ) {
 	
@@ -328,12 +342,14 @@ static int_fast8_t get_resp_name ( const char * src, char *name, char *resttxt )
 *
 *		@param hBL pointer to @ref BL_Data_TypeDef structure
 *		@param hUART pointer to (HAL) UART_HandleTypeDef structure
-*		
+*		@retval 0 if data cannot be set properly
+*		@retval 1 if data was set properly
+*
 *		@warning when temperature will have negative value but variable is unsigned type
 *						 so developer need to check MSB bit of that value and if it is 1 then
 *						 that value is negative!
 */
-void bl_advertUpdate( BL_Data_TypeDef * hBL, UART_HandleTypeDef * hUART ) {
+uint32_t bl_advertUpdate( BL_Data_TypeDef * hBL, UART_HandleTypeDef * hUART ) {
 	
 	// Create string to set advertisment data
 	// For BlueRadio module, data must contain at start: 
@@ -344,6 +360,7 @@ void bl_advertUpdate( BL_Data_TypeDef * hBL, UART_HandleTypeDef * hUART ) {
 	// we used 10 bytes of aur data + FF 85 00 FF = 14 bytes of user data
 	char advert_cmd[50] ;
 	char advert_data[29] ;
+	uint32_t tick_ms ;				// For timeout
 	
 	// xx = 0E - 14 bytes of data will be send to module
 	// OUR UUID  = 0AB3
@@ -372,23 +389,61 @@ void bl_advertUpdate( BL_Data_TypeDef * hBL, UART_HandleTypeDef * hUART ) {
 	// Send command to module 
 	HAL_UART_Transmit( hUART, (uint8_t *)&advert_cmd[0], 42 , 25 ) ;
 	
+	tick_ms = HAL_GetTick() ;
 	// Wait for response
 	do {
 		bl_checkEvents( &blr_buffers, hBL ) ;
-	} while( hBL->status == BL_NOACTION ) ;
+	} while( (hBL->status == BL_NOACTION) && ((HAL_GetTick() - tick_ms) <= 500) ) ;
 	
-	if ( hBL->status == BL_RESPONSE_OK )
-		PRINTF( "\nAdvertising data set\n", 0 );
-	else if ( hBL->status == BL_RESPONSE_ERR ) 
-		PRINTF( "\nAdvertising data NOT set\n", 0 );
+	if ( hBL->status == BL_RESPONSE_OK ) {
+		#ifdef _DEBUG_DEF_
+			PRINTF( "\nAdvertising data set\n", 0 );
+		#endif
+	}
+	else if ( hBL->status == BL_RESPONSE_ERR ) {
+		#ifdef _DEBUG_DEF_
+			PRINTF( "\nAdvertising data NOT set\n", 0 );
+		#endif
+		return 0 ;
+	} 
+	else {
+		return 0 ;
+	}
 		
 	
-	// Sets the same data to 'scan response' payload
-	// ... to do ...
+	// **** Sets the same data to 'scan response' payload:
+	
+	// Reset status in BL structure
+	hBL->status = BL_NOACTION ;
+	advert_cmd[9] = '1'; 							// response data not advertising
+	// Send command to module 
+	HAL_UART_Transmit( hUART, (uint8_t *)&advert_cmd[0], 42 , 25 ) ;
+	
+	tick_ms = HAL_GetTick();
+	// Wait for response
+	do {
+		bl_checkEvents( &blr_buffers, hBL ) ;
+	} while( (hBL->status == BL_NOACTION) && ((HAL_GetTick() - tick_ms) <= 500) ) ;
+	
+	if ( hBL->status == BL_RESPONSE_OK ) {
+		#ifdef _DEBUG_DEF_
+			PRINTF( "\nScanResponse data set\n", 0 );
+		#endif
+	}
+	else if ( hBL->status == BL_RESPONSE_ERR ) {
+		#ifdef _DEBUG_DEF_
+			PRINTF( "\nScanResponse data NOT set\n", 0 );
+		#endif
+		return 0 ;
+	} 
+	else {
+		return 0 ;
+	}
 	
 	// Reset status in BL structure
 	hBL->status = BL_NOACTION ;
 	
+	return 1;
 }
 
 
@@ -396,7 +451,7 @@ void bl_advertUpdate( BL_Data_TypeDef * hBL, UART_HandleTypeDef * hUART ) {
 *		
 *		@param hBL pointer to @ref BL_Data_TypeDef - to read status of response
 *		@param hUART pointer to (HAL) UART_HandleTypeDef structure - for UART transmision
-*		@param buff pointer to 8bit table with minimum 7 elements
+*		@param buff pointer to 8bit table with minimum 14 elements
 *		@return value of enum @ref hf_stat_TypeDef type
 *		@retval @ref BL_RESPONSE_OK if advertisment mode was turned on properly
 *		@retval @ref BL_RESPONSE_ERR if advertisment mode wasn't turn on properly
@@ -412,30 +467,232 @@ hf_stat_TypeDef bl_advertisingON(
 			char * buff
 		) {
 	
-	buff[0] = 'A' ; buff[1] = 'T' ; buff[2] = 'D' ;
-	buff[3] = 'S' ; buff[4] = 'L' ; buff[5] = 'E' ;
-	buff[6] = 0x0D ;
+	uint32_t tick ;	
 	
-	// Reset status in BL structure
+	// Set Bluetooth LE module as connectable and scannable
+	bl_AdvertConfigCMD( buff, 0, 0, 7 ) ;
+
+	tick = HAL_GetTick() ;
+	// Send command:
 	hBL->status = BL_NOACTION ;
-	// Send command to module 
-	HAL_UART_Transmit( hUART, (uint8_t *)&buff[0], 7 , 25 ) ;
+	HAL_UART_Transmit( hUART, (uint8_t *)&buff[0], 14 , 50 ) ;
 	
 	// Wait for response from bluetooth module
 	do {
 		bl_checkEvents( &blr_buffers, hBL ) ;
-	} while( hBL->status == BL_NOACTION ) ;
+	} while( (hBL->status == BL_NOACTION) && ((HAL_GetTick() - tick) <= 300 ) ) ;
+
+	if ( hBL->status == BL_NOACTION ) {
+		return BL_TIMEOUT ;
+	} // If Time OUT
 	
 	
+	// Turn on 
+	buff[0] = 'A' ; buff[1] = 'T' ; buff[2] = 'D' ;
+	buff[3] = 'S' ; buff[4] = 'L' ; buff[5] = 'E' ;
+	buff[6] = 0x0D ;
+	
+	
+	tick = HAL_GetTick() ;
+	// Reset status in BL structure
+	hBL->status = BL_NOACTION ;
+	// Send command to module 
+	HAL_UART_Transmit( hUART, (uint8_t *)&buff[0], 7 , 25 ) ;
+	// Wait for response from bluetooth module
+	do {
+		bl_checkEvents( &blr_buffers, hBL ) ;
+	} while( (hBL->status == BL_NOACTION) && ((HAL_GetTick() - tick) <= 100 ) ) ;
+	
+
 	if ( hBL->status == BL_RESPONSE_OK ) {
 		return BL_RESPONSE_OK ;
 	}	// If Advertising was turned on properly 
 	else if ( hBL->status == BL_RESPONSE_ERR ) {
 		return BL_RESPONSE_ERR ;
 	}	// If Advertising wasn't turn on properly
+	else if ( hBL->status == BL_NOACTION ) {
+		return BL_TIMEOUT ;
+	} // If Time OUT
 	
 	return hBL->status ;		// That couldn't happen
 }
+		
+
+/**	Fills buffer pointed by buff with command to set advertising settings
+*
+*		@param buff pointer to buffer where command will be stored ( need mimimum 14 elements )
+*		@param w_list (doc.) values: 0,1,2,3
+*		@param ad_type (doc.) values: 0,2,3
+*		@param chn (doc.) values: 1,2,3,4,5,6,7
+*		@return number of bytes stored in buffer
+*/
+size_t bl_AdvertConfigCMD(
+						char * buff, 
+						uint32_t w_list,
+						uint32_t ad_type,
+						uint32_t chn  ) {
+	
+	/* START - Assert parameters */
+	if ( w_list > 3 )
+		w_list = 3;
+	
+	if ( ad_type > 3 ) 
+		ad_type = 3;
+	else if ( ad_type == 1 )
+		ad_type = 0;
+	
+	if( chn > 7 ) 
+		chn = 7 ;
+	else if ( chn == 0 )
+		chn = 1 ;
+	
+	/* END - Assert parameters */
+	
+	// Create command:
+	// e.g. ATSDSLE,0,0,7<cr> 
+	buff[0] = 'A' ; buff[1] = 'T' ; buff[2] = 'S' ;
+	buff[3] = 'D' ; buff[4] = 'S' ; buff[5] = 'L' ;
+	buff[6] = 'E' ; buff[7] = ',' ;
+	buff[8] = (char)w_list + 0x30 ; // make ascii
+	buff[9] = ',' ;
+	buff[10] = (char)ad_type + 0x30 ;
+	buff[11] = ',' ;
+	buff[12] = (char)chn + 0x30 ;
+	buff[13] = 0x0D ;
+	
+	
+	return 14 ;
+}
+						
+
+size_t bl_DiscoveryTimConfCMD ( char * buff ) {
+
+	// e.g ATSDITLE,10240,16,16<cr>  
+	buff[0] = 'A' ; buff[1] = 'T' ; buff[2] = 'S' ;
+	buff[3] = 'D' ; buff[4] = 'I' ; buff[5] = 'T' ;
+	buff[6] = 'L' ; buff[7] = 'E' ; buff[8] = ',' ;
+	
+	buff[9] = '6' ; buff[10] = '4' ; buff[11] = '0' ;
+	buff[12] = '0' ; buff[13] = ',' ; buff[14] = '1' ;
+	buff[15] = '6' ; buff[16] = ',' ; buff[17] = '1' ;
+	buff[18] = '6' ; buff[19] = 0x0D ;
+	
+	return 20 ;
+}
+
+
+
+hf_stat_TypeDef bl_startDiscovery(
+			BL_Data_TypeDef * hBL,
+			UART_HandleTypeDef * hUART,
+			char * buff 
+			) {
+	
+	uint32_t tick ;
+	uint32_t ix ;
+				
+	// Disable all tasks
+	//ble_stopallcmd( hBL, hUART, buff );
+	
+	// Set scanning for 4s
+	ix = bl_DiscoveryTimConfCMD( buff ) ;
+	
+	tick = HAL_GetTick() ;
+	// Reset status in BL structure
+	hBL->status = BL_NOACTION ;
+	// Send command to module 
+	HAL_UART_Transmit( hUART, (uint8_t *)&buff[0], ix , 25 ) ;
+	// Wait for response from bluetooth module
+	do {
+		bl_checkEvents( &blr_buffers, hBL ) ;
+	} while( (hBL->status == BL_NOACTION) && ((HAL_GetTick() - tick) <= 100 ) ) ;
+	
+	
+
+				
+	// Enable bluetooth LE discovery option // ATDILE
+	buff[0] = 'A'; buff[1] = 'T'; buff[2] = 'D' ;
+	buff[3] = 'I'; buff[4] = 'L'; buff[5] = 'E' ;
+	buff[6] = 0x0D ;
+	
+				
+	tick = HAL_GetTick() ;
+	// Reset status in BL structure
+	hBL->status = BL_NOACTION ;
+	// Send command to module 
+	HAL_UART_Transmit( hUART, (uint8_t *)&buff[0], 7 , 25 ) ;
+	// Wait for response from bluetooth module
+	
+	do {
+		bl_checkEvents( &blr_buffers, hBL ) ;
+	} while( (hBL->status == BL_NOACTION) && ((HAL_GetTick() - tick) <= 100 ) ) ;
+	
+
+	if ( hBL->status == BL_RESPONSE_OK ) {
+		return BL_RESPONSE_OK ;
+	}	// If Advertising was turned on properly 
+	else if ( hBL->status == BL_RESPONSE_ERR ) {
+		return BL_RESPONSE_ERR ;
+	}	// If Advertising wasn't turn on properly
+	else if ( hBL->status == BL_NOACTION ) {
+		return BL_TIMEOUT ;
+	} // If Time OUT
+	
+	return LIB_HF_ERR ; // ?
+}
+
+
+
+
+uint32_t bl_getCharacteristic( BL_Data_TypeDef * hBL, UART_HandleTypeDef * hUART ) {
+	
+	//const uint8_t uuid_no = 3;
+	//const uint8_t uuid_size = 4 ; // How many characters UUID have (hex converted to ascii)
+	
+
+	char bl_cmd[11 + BL_UUID_SIZE ] = "ATGDCU,";		//max 15 chars when 2B UUID, but when 16B UUID need to be 43 chars
+	size_t i ;
+	uint8_t j ;					// will contain index in bl_cmd while putting together
+	
+	uint32_t ch_no = 0;	// will contain number of proper discovered characteristics
+	
+	
+	// Copy handler to command:
+	j = 7 ;
+	bl_cmd[j++] = hBL->conn.conn_handler[0] ;
+	if ( hBL->conn.conn_handler[1] != '\0' ) {
+		bl_cmd[j++] = hBL->conn.conn_handler[1] ;
+	} // if connection handle is >= 10
+	bl_cmd[j++] = ',' ;
+	
+		
+	// At that moment j will contain position where characteristic's UUID will start copying
+	for( i = 0 ; i < BL_CHAR_NO ; ++i ) {
+		
+		// Copy UUID to command table
+		memcpy( (char*)&bl_cmd[j], (char*)hBL->conn.char_uuid[i] , BL_UUID_SIZE ) ; // size: 4 if UUID is 2B, 32 if UUID is 16B
+		bl_cmd[j+BL_UUID_SIZE] = 0x0D ;		// Add \r character at the end
+		
+		// Reset status in BL structure
+		hBL->status = BL_NOACTION ;
+		// Send command to module 
+		HAL_UART_Transmit( hUART, (uint8_t *)&bl_cmd[0], j + BL_UUID_SIZE + 1, 50 ) ;
+		
+		
+		// Wait for response from bluetooth module until reading task will be ended
+		do {
+			bl_checkEvents( &blr_buffers, hBL ) ;
+		} while( (hBL->status != BL_EV_GATT_DONE) || (hBL->ev_gatt_doneNO != 2) ) ;
+		
+		if ( hBL->ev_gatt_doneERR == 0 ) {
+			++ch_no;
+		} // If was not errors during discovery
+		
+	}
+	
+	return ch_no ;
+}
+
 
 
 
@@ -464,14 +721,14 @@ void ble_stopallcmd( BL_Data_TypeDef * hBL, UART_HandleTypeDef * hUART, char * b
 	HAL_UART_Transmit( hUART, (uint8_t *)&buff[0], 5 , 20 ) ;
 	
 	// Discard all responses/events that should came in a few ms
-	while ( (HAL_GetTick() - tick) <= 150 ) {;}
+	while ( (HAL_GetTick() - tick) <= 250 ) {;}
 	
 		
 	// Reset status in BL structure
 	hBL->status = BL_NOACTION ;
 	
 	// Clear current bluetooth UART buffers status - and get index of reserved buffer
-	ix = bl_buffer_clearStatus( &blr_buffers );
+	ix = bl_buffer_clearStatus( &blr_buffers ) ;
 	// Restart UART RX IT function:
 	HAL_UART_Receive_IT(hUART, (uint8_t*)blr_buffers.buff[ix], BLR_STRUCT_BUFF_SIZE ); // start waiting for data
 	

@@ -2,8 +2,12 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
+
+/*User includes*/
 #include "main_sys.h"
 
+// in main.c - bluetooth connection status
+extern SYS_CONN_TypeDef conn_stat ;
 
 /**
 *		You can (should if it is possible) use these variables in bl_fh_xxxxx handling functions
@@ -11,7 +15,7 @@
 *		\see bl_fh_ERROR()
 */
 static volatile int_fast16_t fh_run_ret ;			/// For store return value from bl_fh_run()
-static volatile char out_data[10] ;						/// Can be useas 3'rd value in bl_fh_run()
+static volatile char out_data[50] ;						/// Can be useas 3'rd value in bl_fh_run()
 static volatile size_t i ;										/// Useful for loops
 
 
@@ -100,7 +104,7 @@ static void bl_fh_ERROR ( void *_hBL, const char * str ) {
 	PRINTF("BL_FH_ERROR", 0);
 	
 	// Read error code
-	fh_run_ret = bl_split_data( &str[0], (char*)&out_data[0], 2 ) ;
+	fh_run_ret = bl_split_data( &str[0], (char*)&out_data[0], 3 ) ;
 	// Test output
 	if( fh_run_ret == 0 ) {
 		// library's internal error
@@ -146,13 +150,23 @@ static void	bl_fh_CONNECT( void *_hBL, const char * str ) {
 	// ADDR is the 6 bytes - this is 12 ASCII characters
 	
 	((BL_Data_TypeDef *)_hBL)->status = BL_EV_CONNECT;
+	((BL_Data_TypeDef *)_hBL)->error = BL_NO_ERRRORS;
+	
 	
 	// Read connection handle
+	// Can be < 10 and >= 10 value - so need check it by return value from bl_split_data()
 	fh_run_ret = bl_split_data( &str[0], (char*)&out_data[0], 2 ) ;
-	if( fh_run_ret == 1 )
-		((BL_Data_TypeDef *)_hBL)->conn.conn_handler = (uint_fast8_t)(out_data[0] - 0x30) ;
-	else if ( fh_run_ret == 2 )
-		((BL_Data_TypeDef *)_hBL)->conn.conn_handler = (uint_fast8_t)((10*(out_data[0] - 0x30)) + (out_data[1] - 0x30) ) ;
+	if( fh_run_ret == 1 ) {
+		((BL_Data_TypeDef *)_hBL)->conn.conn_handler[0] = out_data[0] ;
+		((BL_Data_TypeDef *)_hBL)->conn.conn_handler[1] = '\0' ;
+		//((BL_Data_TypeDef *)_hBL)->conn.conn_handler = (uint8_t)(out_data[0] - 0x30) ;
+	}
+	else if ( fh_run_ret == 2 ) {
+		//((BL_Data_TypeDef *)_hBL)->conn.conn_handler = (uint8_t)((10*(out_data[0] - 0x30)) + (out_data[1] - 0x30) ) ;
+		((BL_Data_TypeDef *)_hBL)->conn.conn_handler[0] = out_data[0] ;
+		((BL_Data_TypeDef *)_hBL)->conn.conn_handler[1] = out_data[1] ; 
+		((BL_Data_TypeDef *)_hBL)->conn.conn_handler[2] = '\0' ;
+	}
 	else if ( fh_run_ret == 0 ){
 		((BL_Data_TypeDef *)_hBL)->status = LIB_HF_ERR ;
 		((BL_Data_TypeDef *)_hBL)->error = BL_CONNECT_HANDLE_ERR ;
@@ -173,20 +187,102 @@ static void	bl_fh_CONNECT( void *_hBL, const char * str ) {
 		memcpy( (char*)((BL_Data_TypeDef *)_hBL)->conn.rem_mac, (char*)&out_data[0], 12 );
 	}	// Address has been read properly
 	else {
-		((BL_Data_TypeDef *)_hBL)->status = LIB_HF_ERR ;
+		//((BL_Data_TypeDef *)_hBL)->status = LIB_HF_ERR ;
 		((BL_Data_TypeDef *)_hBL)->error = BL_CONNECT_ADDR_ERR ;
 	} // Couldn't read address - ERROR
 	
 	
+	// Set status as connected: 
+	conn_stat = CONNECTED ;
 	
-	PRINTF("BL_FH_CONNECT", ((BL_Data_TypeDef *)_hBL)->conn.conn_handler );
-	PRINTF(out_data, 0) ;
+	PRINTF("BL_FH_CONNECT", ((BL_Data_TypeDef *)_hBL)->conn.conn_handler[0] );
+	PRINTFSTR( str ) ;
+	//PRINTF(out_data, 0) ;
 	
 	
 	return; 
 }
-static void	bl_fh_DISCONNECT( void *_hBL, const char * str ) { return; }
-static void	bl_fh_DISCOVERY( void *_hBL, const char * str ) { return; }
+static void	bl_fh_DISCONNECT( void *_hBL, const char * str ) {
+	
+	// Set status as disconnected: 
+	conn_stat = DISCONNECTED ;
+	
+	return;
+}
+
+static void	bl_fh_DISCOVERY( void *_hBL, const char * str ) {
+	
+	// 2,589A1A0D54BD,3,-48,2,02011A-080974656C65666F6E
+	
+	uint32_t ix = 0;
+	
+	uint32_t j ;
+	
+	uint8_t type ; // advertisement or scan response data
+	
+	//get type of that event
+	bl_split_data( &str[ix], (char*)&out_data[0], 12 ) ;
+	type = out_data[0] - 0x30 ;
+	
+	if ( type == 6 ) {
+		// for now not necessary
+	} // scan response data 
+	else if ( type >= 2 ) {
+
+		// get index char placed at the last ','
+		for ( i = 0 ; i < 5 ; ++i ) {
+			fh_run_ret = bl_split_data( &str[ix], (char*)&out_data[0], 20 ) ;
+			ix += fh_run_ret + 1 ;
+			
+			// get rssi value:
+			if ( i == 2 ) {
+				// copy chars to proper place in structure
+				for ( j = ix ; str[j] != ',' ; ++j ) {
+					((BL_Data_TypeDef *)_hBL)->remote_data.rssi[j-ix] = str[j] ;
+				}
+				((BL_Data_TypeDef *)_hBL)->remote_data.rssi[j-ix] = '\0' ;
+				
+				/* FOR NUMERIC VALUE CONVERSION
+				fh_run_ret = bl_split_data( &str[ix + 1], (char*)&out_data[0], 5 ) ;
+				if ( fh_run_ret == 1 ) {
+					rssi = str[ix+1] - 0x30 ;
+				}
+				else if ( fh_run_ret == 2 ) {
+					rssi += (str[ix+1] - 0x30)*10 ;
+					rssi += str[ix+2] - 0x30 ;
+				} 
+				else if ( fh_run_ret == 3 ) {
+					rssi = (str[ix+1] - 0x30)*100 ;
+					rssi = (str[ix+2] - 0x30)*10 ;
+					rssi += str[ix+3] - 0x30 ;
+				}
+				
+				
+				if( str[ix] == '-' ) {
+					rssi = -rssi ;
+				} // negative value
+				*/
+			} // Get RSSI value
+			
+		}
+		// ix - points after last ','
+		
+		// read until '-' met
+		for ( i = ix ; '-' != str[i] ; ++i ) {;}
+		ix = i + 5 ; // ix pints at 5'th element after '-'
+		
+		// from ix are valid data
+		// to do - convert data
+		
+	} // Advertisement data
+	
+	
+	
+	
+	PRINTFSTR( str ) ;
+	return;
+}
+
 static void	bl_fh_PAIR_REQ( void *_hBL, const char * str ) { return; }
 static void	bl_fh_PAIRED( void *_hBL, const char * str ) { return; }
 static void	bl_fh_PAIR_FAIL( void *_hBL, const char * str ) { return; }
@@ -195,11 +291,128 @@ static void bl_fh_PK_DIS( void *_hBL, const char * str ) { return; }
 /* BLUETOOTH LE EVENTS */
 static void	bl_fh_SCCPS( void *_hBL, const char * str ) { return; }
 static void	bl_fh_CPU( void *_hBL, const char * str ) { return; }
-static void	bl_fh_GATT_DONE( void *_hBL, const char * str ) { return; }
+
+static void	bl_fh_GATT_DONE( void *_hBL, const char * str ) {
+	
+	uint8_t inx = 0; 
+	
+		
+	// passed string format: 0,4,01<cr_lf>
+	// read handler:
+	fh_run_ret = bl_split_data( &str[0], (char*)&out_data[0], 3 ) ;
+	inx = fh_run_ret + 1;	// points to task number
+	
+	// Extract action (which was ended) number:
+	fh_run_ret = bl_split_data( &str[inx], (char*)&out_data[0], 3 ) ;
+	inx += (fh_run_ret + 1) ;
+	((BL_Data_TypeDef *)_hBL)->ev_gatt_doneNO = out_data[0] - 0x30u ; // Convert from ascii
+	
+	// Extract error number
+	fh_run_ret = bl_split_data( &str[inx], (char*)&out_data[0], 3 ) ;
+	// at this point, bl_split_data should return < 0 value - means that was last data in string
+	if ( fh_run_ret < 0) {
+		((BL_Data_TypeDef *)_hBL)->ev_gatt_doneERR = ( (out_data[0] - 0x30u) * 10 ) + (out_data[1] - 0x30u) ;
+		((BL_Data_TypeDef *)_hBL)->status = BL_EV_GATT_DONE ;
+	} // Read error value was OK
+	else {
+		((BL_Data_TypeDef *)_hBL)->status = LIB_HF_ERR ;
+	} // Library error
+	
+	#ifdef _DEBUG_PRINTF_
+		PRINTF("BL_FH_GATT_DONE", 0 );
+		PRINTFSTR( &str[0] ) ;
+	#endif
+	
+	return;
+}
+
 static void	bl_fh_GATT_DPS( void *_hBL, const char * str ) { return; }
-static void	bl_fh_GATT_DC( void *_hBL, const char * str ) { return; }
+
+static void	bl_fh_GATT_DC( void *_hBL, const char * str ) {
+
+	uint8_t inx = 0;	// used to getting next data from str
+	uint8_t inx_handle ;	// contain index when characteristic handle starts
+	
+	uint8_t inx_uuid ; 		// index of uuid in hBL->conn.char_uuid table
+	
+	uint16_t tmp ;
+	
+	// Received string: e.g 0,00003,02,2A00 <cr_lf>
+	
+	// Read conn handle:
+	fh_run_ret = bl_split_data( &str[0], (char*)&out_data[0], 3 ) ;
+	inx = fh_run_ret + 1;	// points to handle number
+	inx_handle = inx ;		// save index - start characteristic handle in str
+	
+	// Read characteristic handle:
+	//fh_run_ret = bl_split_data( &str[inx], (char*)&out_data[0], 7 ) ;
+	//inx += fh_run_ret + 1;	// points to type of handle
+	
+	// skip reading characteristic hanlde: 
+	inx += 6 ;
+	
+	// Discard type of handle (+3) and read UUID
+	fh_run_ret = bl_split_data( &str[inx+3], (char*)&out_data[0], 35 ) ;
+	
+	if ( fh_run_ret >= 0 ) {
+		// error! fh_run_ret should have value: BL_UUID_SIZE - 500
+		((BL_Data_TypeDef *)_hBL)->status = LIB_HF_ERR ;
+		return ;
+	}
+	//fh_run_ret += 500 ;
+	// add \0 at the end ( for strcmp function )
+	out_data[BL_UUID_SIZE] = '\0' ;
+	
+	//get index when read UUID is the same as in hBL->conn.char_uuid[][] table.
+	inx_uuid = 250 ;
+	for( i = 0 ; i < BL_CHAR_NO ; ++i ) {
+
+		if ( 0 == strcmp( (const char*)((BL_Data_TypeDef *)_hBL)->conn.char_uuid[i], (const char*)&out_data[0] ) ) 
+		{
+			inx_uuid = i ;
+			break ;
+		}
+	}
+	// Check if characteristic was match
+	if ( inx_uuid == 250 ) {
+		((BL_Data_TypeDef *)_hBL)->status = LIB_HF_ERR ;
+		return ;
+	}
+	
+	// Now copy characteristic handle to table at index which coresponds to UUID(which was read): 
+	// Read characteristic handle:
+	fh_run_ret = bl_split_data( &str[inx_handle], (char*)&out_data[0], 7 ) ;
+	
+	// Copy handle: 
+	tmp = 0 ;
+	for ( i = 0 ; i < 5 ; ++i ) {
+		if ( ( '0' != out_data[i] ) || ( 0 != tmp) ) {
+			((BL_Data_TypeDef *)_hBL)->conn.char_attr_h[ inx_uuid ][i] = out_data[i] ;
+			++tmp ;
+		}
+	}
+	// place \0 at the end of handle
+	((BL_Data_TypeDef *)_hBL)->conn.char_attr_h[ inx_uuid ][5] = '\0' ;
+	
+	
+	((BL_Data_TypeDef *)_hBL)->status = BL_EV_GATT_DC ;
+
+	return ;
+}
+
+
 static void	bl_fh_GATT_DCD( void *_hBL, const char * str ) { return; }
-static void	bl_fh_GATT_VAL( void *_hBL, const char * str ) { return; }
+
+static void	bl_fh_GATT_VAL( void *_hBL, const char * str ) { 
+	
+	#ifdef _DEBUG_PRINTF_
+		PRINTFSTR ("GATT_VAL:") ;
+		PRINTFSTR( str ) ;
+	#endif
+	
+	return;
+}
+
 static void	bl_fh_BRSP( void *_hBL, const char * str ) { return; }
 /* CLASSIC BLUETOOTH EVENTS */
 static void	bl_fh_RN( void *_hBL, const char * str ) { return; }
