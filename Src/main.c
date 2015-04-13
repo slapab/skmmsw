@@ -14,6 +14,7 @@
 
 static void SystemClock_Config(void);
 extern void LCD_MainTask(const BL_Data_TypeDef* const data);
+extern void LCD_StaticText(void);
 
 int32_t bl_read_cmd(char * string, const size_t max_size);
 void delay_ms(const uint32_t delay);
@@ -184,6 +185,7 @@ int main(void)
 
 
 
+	LCD_StaticText();
 	
   while (1)
   {
