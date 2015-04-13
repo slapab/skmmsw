@@ -14,6 +14,8 @@ extern UART_HandleTypeDef huart5;
 // in main.c
 extern struct time_sens_TypeDef sensors_timing ;
 
+// in main.c 
+extern struct blscan_mode_typedef blscan_mode ;
 
 
 /******************************************************************************/
@@ -29,8 +31,11 @@ void SysTick_Handler(void)
   HAL_IncTick();
   HAL_SYSTICK_IRQHandler();
   
-	//Count interval for sensors reading
+	// Count interval for sensors reading
 	++sensors_timing.timer_sensors ;
+	
+	// Count interval for bluetooth scan start task
+	++blscan_mode.timer_scanmode ;
 
 }
 

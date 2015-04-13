@@ -34,13 +34,18 @@ BL_Data_TypeDef weather_data = { .conn.char_uuid[0] = "D3496D233DBF436BB7893967E
 
 // Bluetooth connection status
 SYS_CONN_TypeDef conn_stat = DISCONNECTED ;
-
+														 
 // Time counter - for sensors checking
 struct time_sens_TypeDef sensors_timing = { .timer_sensors = 0,
 																						.is_converting = 0 } ;
 
 
-	int a = 0 ;
+struct blscan_mode_typedef blscan_mode = { .timer_scanmode = 0,
+																					 .block = 0
+																				 };
+
+																							
+int a = 0 ;
 	
 	size_t size_string = 3 ;
 	char send_string[10] ;
@@ -135,10 +140,23 @@ int main(void)
 	
 	*/
 
-
-
+	/**** 								START								****/
+	/**** BLUETOOTH MODULE CONFIGURATION CODE ****/
+	
 	// stop all running commands in bluetooth module
 	ble_stopallcmd( &weather_data, &huart5, &send_string[0] ) ;
+	
+	// Set scanning time in bluetooth module
+	if ( BL_RESPONSE_OK == bl_setDiscoveryTime( &weather_data, &huart5, &send_string[0] ) ) {
+		#ifdef _DEBUG_PRINTF_
+		PRINTFSTR("Advertising time set properly" );
+		#endif
+	}
+	else {
+		#ifdef _DEBUG_PRINTF_
+		PRINTFSTR("Advertising time NOT set properly" );
+		#endif
+	}
 	
 	// Get first data - pressure and temperature 
 	// next try to set advertising data in module
@@ -149,7 +167,7 @@ int main(void)
 			printf( "\nT = %d.%i [C]\n", weather_data.local_data.temp_tot, weather_data.local_data.temp_frac  ) ;
 			printf("\nPreasure = %i [hPa]\n",  weather_data.local_data.press_sea ) ;
 			
-			// Start advertising:
+			// Update advertising payload and scan response payload:
 			bl_advertUpdate( &weather_data, &huart5 ) ;
 			
 			// Try to start advertising mode
@@ -168,34 +186,52 @@ int main(void)
 			
 		} else {
 			#ifdef _DEBUG_PRINTF_
-				printf("\nProblem z odczytem\n" );
+				printf("\nProblem z odczytem danych z czujnikow\n" );
 			#endif
 		}
 	}
 	
 	
+	/**** 								END									****/
+	/**** BLUETOOTH MODULE CONFIGURATION CODE ****/
+	
 	
   while (1)
   {
 		
-		// It has to be called becouse it is part of UART IT reading system
+		// It have to be called because it is part of UART IT reading system
 		bl_checkEvents( &blr_buffers, &weather_data ) ;
 		
-		// Try to read handles for characteristics when connection
-		// was established
-		/*
-		if ( CONNECTED == conn_stat ) {
-			// Try read handles for characteristics
-			utmp = bl_getCharacteristic( &weather_data, &huart5 ) ;
-			if ( utmp != 0 ) {
-				// Characteristic was discovered
-				conn_stat = CONNECTED_WITH_DATA ;
-			}
+		
+		
+		
+		// Bluetooth scann ROUNTINE
+		if ( (blscan_mode.timer_scanmode >= BLUETOOTH_SCAN_ITNERVAL) && 
+				 (blscan_mode.block == 0) ) {
+			
+			// set lock ( should be set until scanning will end) - EVENT_DONE should reset this lock
+			blscan_mode.block = 1;
+			
+			// turn on scanning in bluetooth module:
+			if ( BL_RESPONSE_OK == bl_startDiscovery( &weather_data, &huart5, &send_string[0] ) ) {
+				#ifdef _DEBUG_PRINTF_
+				PRINTFSTR("Scanning mode turned on properly");
+				#endif
+			} // scanning mode turned on
+			else {
+				#ifdef _DEBUG_PRINTF_
+				PRINTFSTR("Scanning mode DID NOT turned on properly");
+				#endif
+			} // scanning mode did not turned on
+
+		} 
+		else if ( blscan_mode.block == 1) {
+			blscan_mode.timer_scanmode = 0;
 		}
-		*/
+		
 		
 		// SENSORS ROUNTINE:
-		/*
+		
 		if ( sensors_timing.timer_sensors >= SENSORS_CHECK_TIME ) {
 			
 			// Start OneShot mesurement
@@ -244,6 +280,19 @@ int main(void)
 			
 		} // IF - start reading value
 		
+		
+		
+		// Try to read handles for characteristics when connection
+		// was established
+		/*
+		if ( CONNECTED == conn_stat ) {
+			// Try read handles for characteristics
+			utmp = bl_getCharacteristic( &weather_data, &huart5 ) ;
+			if ( utmp != 0 ) {
+				// Characteristic was discovered
+				conn_stat = CONNECTED_WITH_DATA ;
+			}
+		}
 		*/
 		
 		/* !!!!!!! OD TEGO MIEJSCA NA RAZIE NIE RUSZAC
@@ -251,6 +300,7 @@ int main(void)
 			 !!!!!!!
 		*/
 		
+	
 		if ( a == 1) {
 			a = 0;
 			

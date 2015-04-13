@@ -9,6 +9,10 @@
 // in main.c - bluetooth connection status
 extern SYS_CONN_TypeDef conn_stat ;
 
+// in main.c - for scanning mode (repetitively turned on)
+extern struct blscan_mode_typedef blscan_mode ;
+
+
 /**
 *		You can (should if it is possible) use these variables in bl_fh_xxxxx handling functions
 *		see example function: bl_fh_ERROR()
@@ -136,11 +140,20 @@ static void bl_fh_ERROR ( void *_hBL, const char * str ) {
 /* GENERAL EVENTS */
 static void	bl_fh_DONE( void *_hBL, const char * str ) { 	
 	// Documentation says that DONE event has two additional data - single digit in ASCII for each
+	
+	// If that was end of ATDI ( scanning command ) (1,1)
+	if ( ( 0x31 == str[0]) && ( 0x31 == str[2]) ) {
+		// Clear LOCK for scanning structure data:
+		blscan_mode.block = 0;
+	}
+	
+	#ifdef _DEBUG_PRINTF_
 	PRINTF("BL_FH_DONE", (10* (uint_fast8_t)(str[0] - 0x30)) + (uint_fast8_t)(str[2] - 0x30) ) ;
+	#endif
 	
 	((BL_Data_TypeDef *)_hBL)->status = BL_EV_DONE ;
 	
-return;
+return ;
 }
 
 static void	bl_fh_CONNECT( void *_hBL, const char * str ) {

@@ -70,6 +70,12 @@ size_t bl_AdvertConfigCMD(
 
 size_t bl_DiscoveryTimConfCMD ( char * buff ) ;
 
+hf_stat_TypeDef bl_setDiscoveryTime(
+			BL_Data_TypeDef * hBL,
+			UART_HandleTypeDef * hUART,
+			char * buff 
+			) ;
+
 hf_stat_TypeDef bl_startDiscovery(
 			BL_Data_TypeDef * hBL,
 			UART_HandleTypeDef * hUART,

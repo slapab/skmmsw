@@ -5,6 +5,7 @@
 #endif
 
 #include "stm32f4xx_hal.h"
+#include <signal.h>
 
 	// For debugging only
 	 #define _DEBUG_PRINTF_ 1
@@ -14,8 +15,12 @@
 
 
 
-// in [ms] time between next two readings
+/// in [ms] time between next two readings
 #define SENSORS_CHECK_TIME 5000
+	
+/// in [ms] time after which scanning mode will be turn on
+/// But should not be the same or less than scanning duration
+#define BLUETOOTH_SCAN_ITNERVAL 8000
 	 
 
 #define BL_UUID_SIZE 32 /// how many chars( 4 or 32 ) UUID has
@@ -23,11 +28,26 @@
 #define BL_CHAR_NO 3	/// number of characteristics to read
 	 
 
-
+/** That structure is using to reading data from sensors
+*		repetitively but with breaks
+*/
 struct time_sens_TypeDef {
 	uint32_t timer_sensors ;
-	uint32_t is_converting ;
+	sig_atomic_t is_converting ;
 };
+
+
+/** That structure is using to turning on scanning (LE mode) in 
+*		bluetooth module repetitively but with breaks
+*		
+*		block variable is using for stoping counting when scanning
+*		is turned on. That variable shoud be reset when scanning stops.
+*/
+struct blscan_mode_typedef {
+	uint32_t timer_scanmode ;
+	sig_atomic_t block ;
+} ;
+
 
 	 
 typedef struct sens_param_typedef {
@@ -50,9 +70,9 @@ typedef struct remote_weather_typedef {
 	volatile uint_fast8_t temp ;					/// only total part of value
 	volatile uint_fast16_t pressure ;			/// atmospheric pressure in [hPa]
 	volatile uint_fast8_t humidity ; 			/// in %
-	volatile uint_fast8_t ch_rain ;				/// chece of rain in %
+	volatile uint_fast8_t ch_rain ;				/// chence of rain in %
 	
-	volatile char rssi[5] ;								/// rssi value -127 to +20 - \0 terminated
+	volatile char rssi[5] ;								/// [string] rssi value -127 to +20 - \0 terminated
 } weather_TypeDef ;
 
 
