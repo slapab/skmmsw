@@ -270,7 +270,11 @@ int main(void)
 					printf( "\nT = %d.%i [C]\n", weather_data.local_data.temp_tot, weather_data.local_data.temp_frac  ) ;
 					printf("\nPreasure = %i [hPa]\n",  weather_data.local_data.press_sea ) ;	
 				#endif
-					
+				
+				#ifdef _DEBUG_PRINTF_
+				PRINTFSTR( weather_descr[weather_data.remote_data.descr_id] ) ;
+				#endif	
+				
 					// Change values in advertisig payload: 
 					bl_advertUpdate( &weather_data, &huart5 ) ;
 					
