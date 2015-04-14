@@ -259,7 +259,7 @@ int main(void)
 			// At the end of that if statement the LCD can be updated
 			if ( (sensors_timing.timer_sensors >= (SENSORS_CHECK_TIME + 600)) && 
 					 (sensors_timing.is_converting == 1 ) 
-				 ) {	 
+				 ) {
 				sensors_timing.timer_sensors = 0 ;
 				sensors_timing.is_converting = 0 ;
 				

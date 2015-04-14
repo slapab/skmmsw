@@ -317,28 +317,45 @@ static void	bl_fh_DISCOVERY( void *_hBL, const char * str ) {
 			
 			// example of expected format data 0415-04-1400:11
 			// get number of weather description - fist byte
-			((BL_Data_TypeDef *)_hBL)->remote_data.descr_id = bl_valF4ascii( &str[ix] ) - 1 ;
-			
-			//Copy date: in format: day.month.year - create string
-			((BL_Data_TypeDef *)_hBL)->remote_data.date[0] =  bl_valF2ascii( &str[ix+16] ) + 0x30 ;
-			((BL_Data_TypeDef *)_hBL)->remote_data.date[1] =  bl_valF2ascii( &str[ix+18] ) + 0x30 ;
-			((BL_Data_TypeDef *)_hBL)->remote_data.date[2] = '.' ;
-			((BL_Data_TypeDef *)_hBL)->remote_data.date[3] =  bl_valF2ascii( &str[ix+10] ) + 0x30 ;
-			((BL_Data_TypeDef *)_hBL)->remote_data.date[4] =  bl_valF2ascii( &str[ix+12] ) + 0x30 ;
-			((BL_Data_TypeDef *)_hBL)->remote_data.date[5] = '.' ;
-			((BL_Data_TypeDef *)_hBL)->remote_data.date[6] = '2';	
-			((BL_Data_TypeDef *)_hBL)->remote_data.date[7] = '0';	
-			((BL_Data_TypeDef *)_hBL)->remote_data.date[8] =  bl_valF2ascii( &str[ix+4] ) + 0x30 ;
-			((BL_Data_TypeDef *)_hBL)->remote_data.date[9] =  bl_valF2ascii( &str[ix+6] ) + 0x30 ;
-			((BL_Data_TypeDef *)_hBL)->remote_data.date[10] = '\0' ;
 			
 			// Copy hours value and covnert to integer:
 			((BL_Data_TypeDef *)_hBL)->hour =  bl_valF4ascii( &str[ix+20] ) ;
 			// Copy minutes value and covnert to integer:
 			((BL_Data_TypeDef *)_hBL)->min =  bl_valF4ascii( &str[ix+26] ) ;
 			
-			
-		} // Advertisement data
+			// Test housr and minutes - for pre valid data.
+			if ( ( ( ((BL_Data_TypeDef *)_hBL)->hour >= 0 ) && ( ((BL_Data_TypeDef *)_hBL)->hour <= 23 ) ) &&
+					 ( ( ((BL_Data_TypeDef *)_hBL)->min >= 0 ) && ( ((BL_Data_TypeDef *)_hBL)->min <= 59 ) )
+				 )
+			{
+				((BL_Data_TypeDef *)_hBL)->remote_data.descr_id = bl_valF4ascii( &str[ix] ) - 1 ;
+				
+				//Copy date: in format: day.month.year - create string
+				((BL_Data_TypeDef *)_hBL)->remote_data.date[0] =  bl_valF2ascii( &str[ix+16] ) + 0x30 ;
+				((BL_Data_TypeDef *)_hBL)->remote_data.date[1] =  bl_valF2ascii( &str[ix+18] ) + 0x30 ;
+				((BL_Data_TypeDef *)_hBL)->remote_data.date[2] = '.' ;
+				((BL_Data_TypeDef *)_hBL)->remote_data.date[3] =  bl_valF2ascii( &str[ix+10] ) + 0x30 ;
+				((BL_Data_TypeDef *)_hBL)->remote_data.date[4] =  bl_valF2ascii( &str[ix+12] ) + 0x30 ;
+				((BL_Data_TypeDef *)_hBL)->remote_data.date[5] = '.' ;
+				((BL_Data_TypeDef *)_hBL)->remote_data.date[6] = '2' ;	
+				((BL_Data_TypeDef *)_hBL)->remote_data.date[7] = '0' ;	
+				((BL_Data_TypeDef *)_hBL)->remote_data.date[8] =  bl_valF2ascii( &str[ix+4] ) + 0x30 ;
+				((BL_Data_TypeDef *)_hBL)->remote_data.date[9] =  bl_valF2ascii( &str[ix+6] ) + 0x30 ;
+				((BL_Data_TypeDef *)_hBL)->remote_data.date[10] = '\0' ;
+				
+				// Copy hours value and covnert to integer:
+				((BL_Data_TypeDef *)_hBL)->hour =  bl_valF4ascii( &str[ix+20] ) ;
+				// Copy minutes value and covnert to integer:
+				((BL_Data_TypeDef *)_hBL)->min =  bl_valF4ascii( &str[ix+26] ) ;
+				
+				
+			} // Advertisement data
+			else {
+				((BL_Data_TypeDef *)_hBL)->hour =  0x00 ;
+				((BL_Data_TypeDef *)_hBL)->min =  0x00 ;
+			} // Error - not valid data
+		
+		}
 	}
 	
 	
@@ -484,5 +501,3 @@ static void	bl_fh_RS( void *_hBL, const char * str ) { return; }
 static void	bl_UC_REQ( void *_hBL, const char * str ) { return; }
 static void	bl_fh_PIN_REQ( void *_hBL, const char * str ) { return; }
 static void	bl_fh_SPP( void *_hBL, const char * str ) { return; }
-
-
