@@ -27,7 +27,7 @@ extern BLR_buff_TypeDef blr_buffers;		// Bluetooth UART buffers stearing handle
 // buffers for Bluetooth UART data
 char bl_buff[BLR_STRUCT_BUFF_NO][BLR_STRUCT_BUFF_SIZE];
 
-// SENSORS AND BLUETOOTH DATA
+// SENSORS AND BLUETOOTH DATA - set UUIDs of characteristics
 BL_Data_TypeDef weather_data = { .conn.char_uuid[0] = "D3496D233DBF436BB7893967E9870EDB",
 .conn.char_uuid[1] = "D4496D233DBF436BB7893967E9870EDB",
 .conn.char_uuid[2] = "D5496D233DBF436BB7893967E9870EDB"
@@ -39,13 +39,24 @@ SYS_CONN_TypeDef conn_stat = DISCONNECTED;
 struct time_sens_TypeDef sensors_timing = { .timer_sensors = 0,
 	.is_converting = 0 };
 
+struct blscan_mode_typedef blscan_mode = { .timer_scanmode = 0,
+	.block = 0
+};
+
+
+// Look-up table with description of weather	 
+const char weather_descr[10][19] = { "", "Slonecznie", "Male zachmurzenie", "Pochmurno", "Silne zachmurzenie",
+"Silne opady", "Opady", "Burzowo", "Opady sniegu", "Mgla" };
+// clear sky few clouds, scattered clouds , broken clouds , shower rain , rain , thunderstorm
+// snow, mist
+
 
 int a = 0;
 
-size_t size_string = 3;
-char send_string[10];
+
+char send_string[30];
 // Get ID from I2C barometer sensor: 
-uint8_t i2c_rcv_data[10];
+uint8_t i2c_rcv_data[15];
 
 
 /**
@@ -156,6 +167,18 @@ int main(void)
 	// stop all running commands in bluetooth module
 	ble_stopallcmd(&weather_data, &huart5, &send_string[0]);
 
+	// Set scanning time in bluetooth module
+	if (BL_RESPONSE_OK == bl_setDiscoveryTime(&weather_data, &huart5, &send_string[0])) {
+#ifdef _DEBUG_PRINTF_
+		PRINTFSTR("Advertising time set properly");
+#endif
+	}
+	else {
+#ifdef _DEBUG_PRINTF_
+		PRINTFSTR("Advertising time NOT set properly");
+#endif
+	}
+
 	// Get first data - pressure and temperature 
 	// next try to set advertising data in module
 	if (mpl_start_OneShot(&hi2c3, 5, 0) == HAL_OK) {
@@ -165,8 +188,9 @@ int main(void)
 			printf("\nT = %d.%i [C]\n", weather_data.local_data.temp_tot, weather_data.local_data.temp_frac);
 			printf("\nPreasure = %i [hPa]\n", weather_data.local_data.press_sea);
 
-			// Start advertising:
+			// Update advertising payload and scan response payload:
 			bl_advertUpdate(&weather_data, &huart5);
+				
 
 			// Try to start advertising mode
 			if (BL_RESPONSE_OK == bl_advertisingON(&weather_data, &huart5, &send_string[0])) {
@@ -185,20 +209,105 @@ int main(void)
 		}
 		else {
 #ifdef _DEBUG_PRINTF_
-			printf("\nProblem z odczytem\n");
+			printf("\nProblem z odczytem danych z czujnikow\n");
 #endif
 		}
 	}
 
 
+	/**** 								END									****/
+	/**** BLUETOOTH MODULE CONFIGURATION CODE ****/
 
 	LCD_StaticText();
-
 	while (1)
 	{
-		LCD_MainTask(&weather_data);
-		// It has to be called becouse it is part of UART IT reading system
+	
+		// It have to be called because it is part of UART IT reading system
 		bl_checkEvents(&blr_buffers, &weather_data);
+
+
+
+
+		// Bluetooth scann ROUNTINE
+		if ((blscan_mode.timer_scanmode >= BLUETOOTH_SCAN_ITNERVAL) &&
+			(blscan_mode.block == 0)) {
+
+			// set lock ( should be set until scanning will end) - EVENT_DONE should reset this lock
+			blscan_mode.block = 1;
+
+			// turn on scanning in bluetooth module:
+			if (BL_RESPONSE_OK == bl_startDiscovery(&weather_data, &huart5, &send_string[0])) {
+#ifdef _DEBUG_PRINTF_
+				PRINTFSTR("Scanning mode turned on properly");
+#endif
+			} // scanning mode turned on
+			else {
+#ifdef _DEBUG_PRINTF_
+				PRINTFSTR("Scanning mode DID NOT turned on properly");
+#endif
+			} // scanning mode did not turned on
+
+		}
+		else if (blscan_mode.block == 1) {
+			blscan_mode.timer_scanmode = 0;
+		}
+
+
+		// SENSORS ROUNTINE:
+
+		if (sensors_timing.timer_sensors >= SENSORS_CHECK_TIME) {
+
+			// Start OneShot mesurement
+			if (sensors_timing.is_converting == 0) {
+				sensors_timing.is_converting = 1;
+
+				// Start reading temp and pressure
+				if (HAL_OK != mpl_start_OneShot(&hi2c3, 5, 0)) {
+					sensors_timing.timer_sensors = 0;
+					sensors_timing.is_converting = 0;
+				} // Error while connecting with MPL3115A2 sensor
+
+			}
+
+
+			// Need to wait while data are prepared in sensors
+
+			// At the end of that if statement the LCD can be updated
+			if ((sensors_timing.timer_sensors >= (SENSORS_CHECK_TIME + 600)) &&
+				(sensors_timing.is_converting == 1)
+				) {
+				sensors_timing.timer_sensors = 0;
+				sensors_timing.is_converting = 0;
+
+				// Read data from MPL3115A2 sensor
+				if (1 == mpl_ReadStore_Data(&hi2c3, &weather_data, &i2c_rcv_data[0])) {
+
+#ifdef _DEBUG_PRINTF_
+					printf("\nT = %d.%i [C]\n", weather_data.local_data.temp_tot, weather_data.local_data.temp_frac);
+					printf("\nPreasure = %i [hPa]\n", weather_data.local_data.press_sea);
+#endif
+
+#ifdef _DEBUG_PRINTF_
+					PRINTFSTR(weather_descr[weather_data.remote_data.descr_id]);
+#endif	
+
+					// Change values in advertisig payload: 
+					bl_advertUpdate(&weather_data, &huart5);
+					LCD_MainTask( &weather_data );
+
+					/// ***** HERE CAN BE CODE TO UPDATE LCD ***** ///
+					/// ***** data are stored in (BL_Data_TypeDef) weather_data vairable
+
+
+				} // If read and store in structure has been done properly
+
+
+
+			}	// After waiting for sensors
+
+		} // IF - start reading value
+
+
 
 		// Try to read handles for characteristics when connection
 		// was established
@@ -213,62 +322,11 @@ int main(void)
 		}
 		*/
 
-		// SENSORS ROUNTINE:
-		/*
-		if ( sensors_timing.timer_sensors >= SENSORS_CHECK_TIME ) {
-
-		// Start OneShot mesurement
-		if ( sensors_timing.is_converting == 0 ) {
-		sensors_timing.is_converting = 1 ;
-
-		// Start reading temp and pressure
-		if ( HAL_OK != mpl_start_OneShot(&hi2c3, 5, 0) ) {
-		sensors_timing.timer_sensors = 0 ;
-		sensors_timing.is_converting = 0 ;
-		} // Error while connecting with MPL3115A2 sensor
-
-		}
-
-
-		// Need to wait while data are prepared in sensors
-
-		// At the end of that if statement the LCD can be updated
-		if ( (sensors_timing.timer_sensors >= (SENSORS_CHECK_TIME + 600)) &&
-		(sensors_timing.is_converting == 1 )
-		) {
-		sensors_timing.timer_sensors = 0 ;
-		sensors_timing.is_converting = 0 ;
-
-		// Read data from MPL3115A2 sensor
-		if ( 1 == mpl_ReadStore_Data(&hi2c3, &weather_data, &i2c_rcv_data[0] ) ) {
-
-		#ifdef _DEBUG_PRINTF_
-		printf( "\nT = %d.%i [C]\n", weather_data.local_data.temp_tot, weather_data.local_data.temp_frac  ) ;
-		printf("\nPreasure = %i [hPa]\n",  weather_data.local_data.press_sea ) ;
-		#endif
-
-		// Change values in advertisig payload:
-		bl_advertUpdate( &weather_data, &huart5 ) ;
-
-
-		/// ***** HERE CAN BE CODE TO UPDATE LCD ***** ///
-		/// ***** data are stored in (BL_Data_TypeDef) weather_data vairable
-
-
-		} // If read and store in structure has been done properly
-
-
-
-		}	// After waiting for sensors
-
-		} // IF - start reading value
-
-		*/
-
 		/* !!!!!!! OD TEGO MIEJSCA NA RAZIE NIE RUSZAC
 		DO DEBUGOWNIA POTRZEBNE
 		!!!!!!!
 		*/
+
 
 		if (a == 1) {
 			a = 0;
@@ -315,9 +373,10 @@ int main(void)
 			}
 
 		}
-		/* USER CODE END 3 */
 
 	}
+	/* USER CODE END 3 */
+
 }
 
 /**
@@ -376,7 +435,6 @@ static void SystemClock_Config(void)
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;  
   HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5);
 }
-
 
 int32_t bl_read_cmd(char * string, const size_t max_size) {
 

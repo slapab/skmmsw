@@ -9,6 +9,10 @@
 // in main.c - bluetooth connection status
 extern SYS_CONN_TypeDef conn_stat ;
 
+// in main.c - for scanning mode (repetitively turned on)
+extern struct blscan_mode_typedef blscan_mode ;
+
+
 /**
 *		You can (should if it is possible) use these variables in bl_fh_xxxxx handling functions
 *		see example function: bl_fh_ERROR()
@@ -85,6 +89,26 @@ int_fast16_t bl_split_data( const char * src, char * out, const uint_fast16_t ou
 }
 
 
+uint8_t bl_valF4ascii( const char * buff ) {
+	char ret1,ret2 ;
+
+	ret1 = ( ( (buff[0] - 0x30) * 10 ) + (buff[1] - 0x30 ) ) ;
+	ret2 = ( ( (buff[2] - 0x30) * 10 ) + (buff[3] - 0x30 ) ) ;
+
+	ret1 = ( ( ret1 - 30 ) * 10) + ( ret2 - 30 );
+
+	return ret1 ;
+}
+
+char bl_valF2ascii ( const char * buff ) {
+	char ret ;
+
+	ret = ( ( buff[0] - 0x30 ) * 10 ) + (buff[1] - 0x30 ) ;
+	return ret - 30;
+}
+
+
+
 /* COMMAND STATUS RESPONSES */
 
 // OK response handle
@@ -136,11 +160,20 @@ static void bl_fh_ERROR ( void *_hBL, const char * str ) {
 /* GENERAL EVENTS */
 static void	bl_fh_DONE( void *_hBL, const char * str ) { 	
 	// Documentation says that DONE event has two additional data - single digit in ASCII for each
+	
+	// If that was end of ATDI ( scanning command ) (1,1)
+	if ( ( 0x31 == str[0]) && ( 0x31 == str[2]) ) {
+		// Clear LOCK for scanning structure data:
+		blscan_mode.block = 0;
+	}
+	
+	#ifdef _DEBUG_PRINTF_
 	PRINTF("BL_FH_DONE", (10* (uint_fast8_t)(str[0] - 0x30)) + (uint_fast8_t)(str[2] - 0x30) ) ;
+	#endif
 	
 	((BL_Data_TypeDef *)_hBL)->status = BL_EV_DONE ;
 	
-return;
+return ;
 }
 
 static void	bl_fh_CONNECT( void *_hBL, const char * str ) {
@@ -213,7 +246,7 @@ static void	bl_fh_DISCONNECT( void *_hBL, const char * str ) {
 static void	bl_fh_DISCOVERY( void *_hBL, const char * str ) {
 	
 	// 2,589A1A0D54BD,3,-48,2,02011A-080974656C65666F6E
-	
+	// 0415-04-1400:11
 	uint32_t ix = 0;
 	
 	uint32_t j ;
@@ -271,11 +304,59 @@ static void	bl_fh_DISCOVERY( void *_hBL, const char * str ) {
 		for ( i = ix ; '-' != str[i] ; ++i ) {;}
 		ix = i + 5 ; // ix pints at 5'th element after '-'
 		
-		// from ix are valid data
-		// to do - convert data
+		//string 0415-04-1400:11
+		//hex 30 34 31 35 2d 30 34 2d 31 34 31 35 3a 31 31
+		//2,589A1A0D54BD,3,-48,2,02011A-080974656C65666F6E
 		
-	} // Advertisement data
-	
+			
+		// Filter only valid type of advertising: 
+		if ( (str[ix-2] == '0') && ( str[ix-1] == '9' ) ) {
+		
+				
+			// from ix are valid data
+			
+			// example of expected format data 0415-04-1400:11
+			// get number of weather description - fist byte
+			
+			// Copy hours value and covnert to integer:
+			((BL_Data_TypeDef *)_hBL)->hour =  bl_valF4ascii( &str[ix+20] ) ;
+			// Copy minutes value and covnert to integer:
+			((BL_Data_TypeDef *)_hBL)->min =  bl_valF4ascii( &str[ix+26] ) ;
+			
+			// Test housr and minutes - for pre valid data.
+			if ( ( ( ((BL_Data_TypeDef *)_hBL)->hour >= 0 ) && ( ((BL_Data_TypeDef *)_hBL)->hour <= 23 ) ) &&
+					 ( ( ((BL_Data_TypeDef *)_hBL)->min >= 0 ) && ( ((BL_Data_TypeDef *)_hBL)->min <= 59 ) )
+				 )
+			{
+				((BL_Data_TypeDef *)_hBL)->remote_data.descr_id = bl_valF4ascii( &str[ix] ) ;
+				
+				//Copy date: in format: day.month.year - create string
+				((BL_Data_TypeDef *)_hBL)->remote_data.date[0] =  bl_valF2ascii( &str[ix+16] ) + 0x30 ;
+				((BL_Data_TypeDef *)_hBL)->remote_data.date[1] =  bl_valF2ascii( &str[ix+18] ) + 0x30 ;
+				((BL_Data_TypeDef *)_hBL)->remote_data.date[2] = '.' ;
+				((BL_Data_TypeDef *)_hBL)->remote_data.date[3] =  bl_valF2ascii( &str[ix+10] ) + 0x30 ;
+				((BL_Data_TypeDef *)_hBL)->remote_data.date[4] =  bl_valF2ascii( &str[ix+12] ) + 0x30 ;
+				((BL_Data_TypeDef *)_hBL)->remote_data.date[5] = '.' ;
+				((BL_Data_TypeDef *)_hBL)->remote_data.date[6] = '2' ;	
+				((BL_Data_TypeDef *)_hBL)->remote_data.date[7] = '0' ;	
+				((BL_Data_TypeDef *)_hBL)->remote_data.date[8] =  bl_valF2ascii( &str[ix+4] ) + 0x30 ;
+				((BL_Data_TypeDef *)_hBL)->remote_data.date[9] =  bl_valF2ascii( &str[ix+6] ) + 0x30 ;
+				((BL_Data_TypeDef *)_hBL)->remote_data.date[10] = '\0' ;
+				
+				// Copy hours value and covnert to integer:
+				((BL_Data_TypeDef *)_hBL)->hour =  bl_valF4ascii( &str[ix+20] ) ;
+				// Copy minutes value and covnert to integer:
+				((BL_Data_TypeDef *)_hBL)->min =  bl_valF4ascii( &str[ix+26] ) ;
+				
+				
+			} // Advertisement data
+			else {
+				((BL_Data_TypeDef *)_hBL)->hour =  0x00 ;
+				((BL_Data_TypeDef *)_hBL)->min =  0x00 ;
+			} // Error - not valid data
+		
+		}
+	}
 	
 	
 	
@@ -420,5 +501,3 @@ static void	bl_fh_RS( void *_hBL, const char * str ) { return; }
 static void	bl_UC_REQ( void *_hBL, const char * str ) { return; }
 static void	bl_fh_PIN_REQ( void *_hBL, const char * str ) { return; }
 static void	bl_fh_SPP( void *_hBL, const char * str ) { return; }
-
-

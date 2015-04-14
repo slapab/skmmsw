@@ -54,19 +54,40 @@ int32_t bl_chngStatBuff( BLR_buff_TypeDef * hBL ) ; 		// Must be called in UART 
 void bl_checkEvents( BLR_buff_TypeDef * hBL, void * fh_param ) ;
 
 uint32_t bl_advertUpdate( BL_Data_TypeDef * hBL, UART_HandleTypeDef * hUART ) ;
+
+
 hf_stat_TypeDef bl_advertisingON(
 			BL_Data_TypeDef * hBL,
 			UART_HandleTypeDef * hUART,
 			char * buff
 		) ;
+			
+size_t bl_AdvertConfigCMD(
+			char * buff, 
+			uint32_t w_list,
+			uint32_t ad_type,
+			uint32_t chn  ) ;
 
+size_t bl_DiscoveryTimConfCMD ( char * buff ) ;
+
+hf_stat_TypeDef bl_setDiscoveryTime(
+			BL_Data_TypeDef * hBL,
+			UART_HandleTypeDef * hUART,
+			char * buff 
+			) ;
+
+hf_stat_TypeDef bl_startDiscovery(
+			BL_Data_TypeDef * hBL,
+			UART_HandleTypeDef * hUART,
+			char * buff 
+			) ;
+			
+			
+uint32_t bl_getCharacteristic( BL_Data_TypeDef * hBL, UART_HandleTypeDef * hUART ) ;
+			
 void ble_stopallcmd( BL_Data_TypeDef * hBL, UART_HandleTypeDef * hUART, char * buff );
 
-size_t bl_AdvertConfigCMD(
-						char * buff, 
-						uint32_t w_list,
-						uint32_t ad_type,
-						uint32_t chn  );
+
 
 int_fast8_t bl_handleResp( void * _hBL, const char * src ) ;
 static int_fast16_t match_rsp( const char * str ) ;

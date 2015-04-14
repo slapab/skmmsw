@@ -44,7 +44,14 @@ extern LTDC_HandleTypeDef hltdc;
 extern I2C_HandleTypeDef hi2c3;
 extern UART_HandleTypeDef huart5;
 
+// in main.c
 extern struct time_sens_TypeDef sensors_timing;
+
+// in main.c 
+extern struct blscan_mode_typedef blscan_mode;
+
+// in main.c - for increment timing
+extern BL_Data_TypeDef weather_data;
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 
@@ -52,11 +59,15 @@ extern struct time_sens_TypeDef sensors_timing;
 /*            Cortex-M4 Processor Exceptions Handlers                         */
 /******************************************************************************/
 
+
+static uint32_t Hm_ms = 0;
+static uint32_t Hm_s = 0;
+
 /**
-  * @brief   This function handles NMI exception.
-  * @param  None
-  * @retval None
-  */
+* @brief   This function handles NMI exception.
+* @param  None
+* @retval None
+*/
 void NMI_Handler(void)
 {
 }
@@ -133,7 +144,31 @@ void SysTick_Handler(void)
   HAL_IncTick();
   HAL_SYSTICK_IRQHandler();
   OS_TimeMS++;
+
+  // Count interval for sensors reading
   ++sensors_timing.timer_sensors;
+
+  // Count interval for bluetooth scan start task
+  ++blscan_mode.timer_scanmode;
+
+
+  // Keep time alive :D :
+  ++Hm_ms; // cound ms
+  if (Hm_ms >= 1000) {
+	  ++Hm_s;		// count seconds
+	  if (Hm_s >= 60) {
+		  ++weather_data.min; // count minutes
+		  if (weather_data.min >= 60) {
+			  ++weather_data.hour; // count hours
+			  if (weather_data.hour >= 24) {
+				  weather_data.hour = 0;
+			  } // check hours
+			  weather_data.min = 0;
+		  } // check minutes
+		  Hm_s = 0;
+	  } // check s
+	  Hm_ms = 0;
+  } // Check ms
 }
 
 

@@ -26,10 +26,15 @@ Project File Date:  04/09/2015
 
 <h2>Output:</h2>
 Build target 'STM32F429I_DISCO'
-compiling LCD_MainTask.c...
+compiling main.c...
+..\Src\main.c(69): warning:  #177-D: variable "utmp" was declared but never referenced
+        uint32_t utmp;
+..\Src\main.c(488): warning:  #111-D: statement is unreachable
+        return -2;
+..\Src\main.c: 2 warnings, 0 errors
 linking...
-Program Size: Code=49704 RO-data=22440 RW-data=828 ZI-data=172076  
-".\STM32F429I_DISCO\STM32F429I_DISCO.axf" - 0 Error(s), 0 Warning(s).
+Program Size: Code=50880 RO-data=22632 RW-data=824 ZI-data=172104  
+".\STM32F429I_DISCO\STM32F429I_DISCO.axf" - 0 Error(s), 2 Warning(s).
 
 <h2>Collection of Component include folders:</h2>
   D:\OneDrive\Study\SKMMSW\LCD\MDK-ARM\RTE

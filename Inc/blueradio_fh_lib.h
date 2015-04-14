@@ -17,6 +17,9 @@ void bl_fh_run( void * _hBL, uint_fast16_t index, const char * parstr ) ;
 // That function should be useful in response/event hadnle functions
 int_fast16_t bl_split_data( const char * src, char * out, const uint_fast16_t out_size ) ;	
 
+uint8_t bl_valF4ascii( const char * buff ) ;
+char bl_valF2ascii ( const char * buff ) ;
+
 	
 // Functios to handle each possible response/event from bluetooth module
 // Each function must have the same returned type and input argument, it is: 

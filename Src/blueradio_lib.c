@@ -501,9 +501,9 @@ hf_stat_TypeDef bl_advertisingON(
 	// Wait for response from bluetooth module
 	do {
 		bl_checkEvents( &blr_buffers, hBL ) ;
-	} while( (hBL->status == BL_NOACTION) && ((HAL_GetTick() - tick) <= 100 ) ) ;
+	} while( (hBL->status == BL_NOACTION) && ((HAL_GetTick() - tick) <= 500 ) ) ;
 	
-
+/*	If not need to return specific data code presented below is unnecessary
 	if ( hBL->status == BL_RESPONSE_OK ) {
 		return BL_RESPONSE_OK ;
 	}	// If Advertising was turned on properly 
@@ -513,8 +513,8 @@ hf_stat_TypeDef bl_advertisingON(
 	else if ( hBL->status == BL_NOACTION ) {
 		return BL_TIMEOUT ;
 	} // If Time OUT
-	
-	return hBL->status ;		// That couldn't happen
+*/
+	return hBL->status ;
 }
 		
 
@@ -563,16 +563,64 @@ size_t bl_AdvertConfigCMD(
 	
 	return 14 ;
 }
-						
 
+
+
+/**	Function sets (LE mode) scanning time in bluetooth mode.
+*		To specify that time check function @ref bl_DiscoveryTimConfCMD()
+*		
+*		@param hBL pointer to @ref BLR_buff_TypeDef structure
+*		@param hUART pointer to (HAL) UART_HandleTypeDef structure
+*		@param buff pinter to buffer where will be AT command store - must have at least 5 elements!
+*		
+*		@return returned value which received from bl_hf_...functions or if timeout occurred
+*/
+hf_stat_TypeDef bl_setDiscoveryTime(
+			BL_Data_TypeDef * hBL,
+			UART_HandleTypeDef * hUART,
+			char * buff 
+			) {
+	size_t cmd_size ;
+	uint32_t tick ;
+				
+	cmd_size = bl_DiscoveryTimConfCMD( buff ) ;
+	
+	tick = HAL_GetTick() ;
+	hBL->status = BL_NOACTION ;
+	// Send command to module 
+	HAL_UART_Transmit( hUART, (uint8_t *)&buff[0], cmd_size , 25 ) ;
+	// Wait for response from bluetooth module
+	do {
+		bl_checkEvents( &blr_buffers, hBL ) ;
+	} while( (hBL->status == BL_NOACTION) && ((HAL_GetTick() - tick) <= 500 ) ) ;			
+	
+	
+	return hBL->status ;
+}
+
+
+
+/**	Function fill buffer buff with command which will change scanning
+*		time (LE mode) in bluetooth mode.
+*
+*		@note check bluetoth documentation to get patter for setting time
+*		and you need to place in this function manually.
+*		
+*		@param buff pinter to buffer where will be AT command store (buff
+*		shoud have minimum 20 elements)
+*		
+*		@return number of bytes stored ind buffer (buff)
+*/
 size_t bl_DiscoveryTimConfCMD ( char * buff ) {
 
 	// e.g ATSDITLE,10240,16,16<cr>  
+	// for 4s value is 6400
+	// for 3s value is 4800
 	buff[0] = 'A' ; buff[1] = 'T' ; buff[2] = 'S' ;
 	buff[3] = 'D' ; buff[4] = 'I' ; buff[5] = 'T' ;
 	buff[6] = 'L' ; buff[7] = 'E' ; buff[8] = ',' ;
 	
-	buff[9] = '6' ; buff[10] = '4' ; buff[11] = '0' ;
+	buff[9] = '4' ; buff[10] = '8' ; buff[11] = '0' ;
 	buff[12] = '0' ; buff[13] = ',' ; buff[14] = '1' ;
 	buff[15] = '6' ; buff[16] = ',' ; buff[17] = '1' ;
 	buff[18] = '6' ; buff[19] = 0x0D ;
@@ -582,6 +630,16 @@ size_t bl_DiscoveryTimConfCMD ( char * buff ) {
 
 
 
+/**	Function starts (LE mode) scanning mode in bluetooth module
+*
+*		To set the time length of the scanning use function @ref bl_setDiscoveryTime()
+*		
+*		@param hBL pointer to @ref BLR_buff_TypeDef structure
+*		@param hUART pointer to (HAL) UART_HandleTypeDef structure
+*		@param buff pinter to buffer where will be AT command store
+*		
+*		@return returned value which received from bl_hf_...functions or if timeout occurred
+*/
 hf_stat_TypeDef bl_startDiscovery(
 			BL_Data_TypeDef * hBL,
 			UART_HandleTypeDef * hUART,
@@ -591,11 +649,8 @@ hf_stat_TypeDef bl_startDiscovery(
 	uint32_t tick ;
 	uint32_t ix ;
 				
-	// Disable all tasks
-	//ble_stopallcmd( hBL, hUART, buff );
-	
 	// Set scanning for 4s
-	ix = bl_DiscoveryTimConfCMD( buff ) ;
+	//ix = bl_DiscoveryTimConfCMD( buff ) ;
 	
 	tick = HAL_GetTick() ;
 	// Reset status in BL structure
@@ -605,7 +660,7 @@ hf_stat_TypeDef bl_startDiscovery(
 	// Wait for response from bluetooth module
 	do {
 		bl_checkEvents( &blr_buffers, hBL ) ;
-	} while( (hBL->status == BL_NOACTION) && ((HAL_GetTick() - tick) <= 100 ) ) ;
+	} while( (hBL->status == BL_NOACTION) && ((HAL_GetTick() - tick) <= 500 ) ) ;
 	
 	
 
@@ -625,9 +680,9 @@ hf_stat_TypeDef bl_startDiscovery(
 	
 	do {
 		bl_checkEvents( &blr_buffers, hBL ) ;
-	} while( (hBL->status == BL_NOACTION) && ((HAL_GetTick() - tick) <= 100 ) ) ;
+	} while( (hBL->status == BL_NOACTION) && ((HAL_GetTick() - tick) <= 500 ) ) ;
 	
-
+/* If not need return specific other data then code preseted below does not make sense
 	if ( hBL->status == BL_RESPONSE_OK ) {
 		return BL_RESPONSE_OK ;
 	}	// If Advertising was turned on properly 
@@ -637,19 +692,20 @@ hf_stat_TypeDef bl_startDiscovery(
 	else if ( hBL->status == BL_NOACTION ) {
 		return BL_TIMEOUT ;
 	} // If Time OUT
-	
-	return LIB_HF_ERR ; // ?
+*/	
+	return hBL->status ;
 }
 
 
 
-
+/** That function sends command to bluetooth module with request to get handle of
+*		given characteristic's UUID
+*	
+*		@warning If this warning still exist it means that function which will handle
+*		event from bluetooth are not working properly! ( bl_fh_GATT_DC() function in blueradio_fh_lib.c )
+*/
 uint32_t bl_getCharacteristic( BL_Data_TypeDef * hBL, UART_HandleTypeDef * hUART ) {
 	
-	//const uint8_t uuid_no = 3;
-	//const uint8_t uuid_size = 4 ; // How many characters UUID have (hex converted to ascii)
-	
-
 	char bl_cmd[11 + BL_UUID_SIZE ] = "ATGDCU,";		//max 15 chars when 2B UUID, but when 16B UUID need to be 43 chars
 	size_t i ;
 	uint8_t j ;					// will contain index in bl_cmd while putting together
