@@ -65,14 +65,15 @@ typedef struct sens_param_typedef {
 typedef struct remote_weather_typedef {
 	
 	volatile char date[11] ; 							/// date for that weather data, e.g. 23.07.2015 - null terminated
-	volatile char time[6] ;								/// time for that weather data, e.g. 13:00
-	
-	volatile uint_fast8_t temp ;					/// only total part of value
-	volatile uint_fast16_t pressure ;			/// atmospheric pressure in [hPa]
-	volatile uint_fast8_t humidity ; 			/// in %
-	volatile uint_fast8_t ch_rain ;				/// chence of rain in %
+	volatile uint8_t descr_id;						/// wather description - index for look-up table
 	
 	volatile char rssi[5] ;								/// [string] rssi value -127 to +20 - \0 terminated
+	
+	
+	//volatile uint_fast8_t temp ;					/// only total part of value
+	//volatile uint_fast16_t pressure ;			/// atmospheric pressure in [hPa]
+	//volatile uint_fast8_t humidity ; 			/// in %
+	//volatile uint_fast8_t ch_rain ;				/// chence of rain in %
 } weather_TypeDef ;
 
 
@@ -144,8 +145,8 @@ typedef struct bluetooth_data_typedef {
 	sensors_TypeDef local_data ;
 	weather_TypeDef remote_data ;
 	
-	volatile uint8_t hours ;				/// Current hour - valid only when was bluetooth connection established
-	volatile uint8_t min ;					/// Current minutes - valid only when was bluetooth connectio established
+	volatile sig_atomic_t hour ;				/// Current hour - valid only when was bluetooth connection established
+	volatile sig_atomic_t min ;					/// Current minutes - valid only when was bluetooth connectio established
 	
 	blueConn_TypeDef conn ;					/// Bluetooth connection parameters
 	

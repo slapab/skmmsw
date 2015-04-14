@@ -44,13 +44,20 @@ struct blscan_mode_typedef blscan_mode = { .timer_scanmode = 0,
 																					 .block = 0
 																				 };
 
-																							
-int a = 0 ;
+																				 
+// Look-up table with description of weather	 
+const char weather_descr[9][19] = { "Slonecznie", "Male zachmurzenie", "Pochmurno", "Silne zachmurzenie",
+		"Silne opady", "Opady", "Burzowo", "Opady sniegu", "Mgla" } ;
+// clear sky few clouds, scattered clouds , broken clouds , shower rain , rain , thunderstorm
+// snow, mist
+		
+		
+		
+	int a = 0 ;
 	
-	size_t size_string = 3 ;
-	char send_string[10] ;
-	// Get ID from I2C barometer sensor: 
-	uint8_t i2c_rcv_data[10] ;
+	char send_string[30] ;
+
+	uint8_t i2c_rcv_data[15] ;
 
 int main(void)
 {

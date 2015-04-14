@@ -89,6 +89,26 @@ int_fast16_t bl_split_data( const char * src, char * out, const uint_fast16_t ou
 }
 
 
+uint8_t bl_valF4ascii( const char * buff ) {
+	char ret1,ret2 ;
+
+	ret1 = ( ( (buff[0] - 0x30) * 10 ) + (buff[1] - 0x30 ) ) ;
+	ret2 = ( ( (buff[2] - 0x30) * 10 ) + (buff[3] - 0x30 ) ) ;
+
+	ret1 = ( ( ret1 - 30 ) * 10) + ( ret2 - 30 );
+
+	return ret1 ;
+}
+
+char bl_valF2ascii ( const char * buff ) {
+	char ret ;
+
+	ret = ( ( buff[0] - 0x30 ) * 10 ) + (buff[1] - 0x30 ) ;
+	return ret - 30;
+}
+
+
+
 /* COMMAND STATUS RESPONSES */
 
 // OK response handle
@@ -226,7 +246,7 @@ static void	bl_fh_DISCONNECT( void *_hBL, const char * str ) {
 static void	bl_fh_DISCOVERY( void *_hBL, const char * str ) {
 	
 	// 2,589A1A0D54BD,3,-48,2,02011A-080974656C65666F6E
-	
+	// 0415-04-1400:11
 	uint32_t ix = 0;
 	
 	uint32_t j ;
@@ -285,7 +305,29 @@ static void	bl_fh_DISCOVERY( void *_hBL, const char * str ) {
 		ix = i + 5 ; // ix pints at 5'th element after '-'
 		
 		// from ix are valid data
-		// to do - convert data
+		
+		// example of expected format data 0415-04-1400:11
+		// get number of weather description - fist byte
+		((BL_Data_TypeDef *)_hBL)->remote_data.descr_id = bl_valF4ascii( &str[ix] ) ;
+		
+		//Copy date: in format: day.month.year - create string
+		((BL_Data_TypeDef *)_hBL)->remote_data.date[0] =  bl_valF2ascii( &str[ix+16] ) + 0x30 ;
+		((BL_Data_TypeDef *)_hBL)->remote_data.date[1] =  bl_valF2ascii( &str[ix+18] ) + 0x30 ;
+		((BL_Data_TypeDef *)_hBL)->remote_data.date[2] = '.' ;
+		((BL_Data_TypeDef *)_hBL)->remote_data.date[3] =  bl_valF2ascii( &str[ix+10] ) + 0x30 ;
+		((BL_Data_TypeDef *)_hBL)->remote_data.date[4] =  bl_valF2ascii( &str[ix+12] ) + 0x30 ;
+		((BL_Data_TypeDef *)_hBL)->remote_data.date[5] = '.' ;
+		((BL_Data_TypeDef *)_hBL)->remote_data.date[6] = '2';	
+		((BL_Data_TypeDef *)_hBL)->remote_data.date[7] = '0';	
+		((BL_Data_TypeDef *)_hBL)->remote_data.date[8] =  bl_valF2ascii( &str[ix+4] ) + 0x30 ;
+		((BL_Data_TypeDef *)_hBL)->remote_data.date[9] =  bl_valF2ascii( &str[ix+6] ) + 0x30 ;
+		((BL_Data_TypeDef *)_hBL)->remote_data.date[10] = '\0' ;
+		
+		// Copy hours value and covnert to integer:
+		((BL_Data_TypeDef *)_hBL)->hour =  bl_valF4ascii( &str[ix+20] ) ;
+		// Copy minutes value and covnert to integer:
+		((BL_Data_TypeDef *)_hBL)->min =  bl_valF4ascii( &str[ix+26] ) ;
+		
 		
 	} // Advertisement data
 	

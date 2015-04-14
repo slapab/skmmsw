@@ -17,6 +17,8 @@ extern struct time_sens_TypeDef sensors_timing ;
 // in main.c 
 extern struct blscan_mode_typedef blscan_mode ;
 
+// in main.c - for increment timing
+extern BL_Data_TypeDef weather_data ;
 
 /******************************************************************************/
 /*            Cortex-M4 Processor Interruption and Exception Handlers         */ 
@@ -25,6 +27,11 @@ extern struct blscan_mode_typedef blscan_mode ;
 /**
 * @brief This function handles System tick timer.
 */
+
+// Variable to count ms for increment seconds
+static uint32_t Hm_ms = 0;
+static uint32_t Hm_s = 0;
+
 void SysTick_Handler(void)
 {
   
@@ -37,6 +44,24 @@ void SysTick_Handler(void)
 	// Count interval for bluetooth scan start task
 	++blscan_mode.timer_scanmode ;
 
+	
+	// Keep time alive :D :
+	++Hm_ms; // cound ms
+	if ( Hm_ms >= 1000 ) {
+		++Hm_s ;		// count seconds
+		if ( Hm_s >= 60 ) {
+			++weather_data.min ; // count minutes
+			if ( weather_data.min >= 60 ) {
+				++weather_data.hour ; // count hours
+				if ( weather_data.hour >= 24 ) {
+					weather_data.hour = 0 ;
+				} // check hours
+				weather_data.min = 0 ;
+			} // check minutes
+			Hm_s = 0 ;
+		} // check s
+		Hm_ms = 0;
+	} // Check ms
 }
 
 /**
