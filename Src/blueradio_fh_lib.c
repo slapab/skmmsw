@@ -316,8 +316,7 @@ static void	bl_fh_DISCOVERY( void *_hBL, const char * str ) {
 			// from ix are valid data
 			
 			// example of expected format data 0415-04-1400:11
-			// get number of weather description - fist byte
-			
+					
 			// Copy hours value and covnert to integer:
 			((BL_Data_TypeDef *)_hBL)->hour =  bl_valF4ascii( &str[ix+20] ) ;
 			// Copy minutes value and covnert to integer:
@@ -328,7 +327,26 @@ static void	bl_fh_DISCOVERY( void *_hBL, const char * str ) {
 					 ( ( ((BL_Data_TypeDef *)_hBL)->min >= 0 ) && ( ((BL_Data_TypeDef *)_hBL)->min <= 59 ) )
 				 )
 			{
-				((BL_Data_TypeDef *)_hBL)->remote_data.descr_id = bl_valF4ascii( &str[ix] ) - 1 ;
+				// get number of weather description - fist byte
+				((BL_Data_TypeDef *)_hBL)->remote_data.descr_id = bl_valF4ascii( &str[ix] );
+				
+				// valid descr_id data
+				if ( ((BL_Data_TypeDef *)_hBL)->remote_data.descr_id >= 5 ) {
+					switch( ((BL_Data_TypeDef *)_hBL)->remote_data.descr_id  ) {
+						case 9 : ((BL_Data_TypeDef *)_hBL)->remote_data.descr_id = 5 ;
+											break ;
+						case 10 : ((BL_Data_TypeDef *)_hBL)->remote_data.descr_id = 6 ;
+											break ;
+						case 11 : ((BL_Data_TypeDef *)_hBL)->remote_data.descr_id = 7 ;
+											break ;
+						case 13 : ((BL_Data_TypeDef *)_hBL)->remote_data.descr_id = 8 ;
+											break ;
+						case 50 : ((BL_Data_TypeDef *)_hBL)->remote_data.descr_id = 9 ;
+											break ;
+						default: ((BL_Data_TypeDef *)_hBL)->remote_data.descr_id = 0 ;
+					}
+					
+				} // data from api are not in order
 				
 				//Copy date: in format: day.month.year - create string
 				((BL_Data_TypeDef *)_hBL)->remote_data.date[0] =  bl_valF2ascii( &str[ix+16] ) + 0x30 ;
@@ -355,7 +373,10 @@ static void	bl_fh_DISCOVERY( void *_hBL, const char * str ) {
 				((BL_Data_TypeDef *)_hBL)->min =  0x00 ;
 			} // Error - not valid data
 		
-		}
+		} // Data are potentailly from proper device
+		else {
+			((BL_Data_TypeDef *)_hBL)->remote_data.rssi[0] = '\0' ;
+		} // Data are from another device - clear rssi signal
 	}
 	
 	

@@ -46,7 +46,7 @@ struct blscan_mode_typedef blscan_mode = { .timer_scanmode = 0,
 
 																				 
 // Look-up table with description of weather	 
-const char weather_descr[9][19] = { "Slonecznie", "Male zachmurzenie", "Pochmurno", "Silne zachmurzenie",
+const char weather_descr[10][19] = { "", "Slonecznie", "Male zachmurzenie", "Pochmurno", "Silne zachmurzenie",
 		"Silne opady", "Opady", "Burzowo", "Opady sniegu", "Mgla" } ;
 // clear sky few clouds, scattered clouds , broken clouds , shower rain , rain , thunderstorm
 // snow, mist
