@@ -12,6 +12,8 @@
 static char tmp[TMP_SIZE];
 extern const char weather_descr[9][19];
 
+uint8_t desc_id = 0;
+
 void LCD_StaticText(void) {
 	
 	GUI_Clear();
@@ -69,8 +71,23 @@ void LCD_MainTask(const BL_Data_TypeDef* const data) {
 	GUI_DispStringAt(tmp, X_GAP1 , 130);
 	
 	// Weather conditions
+	if (data->remote_data.descr_id == 9)
+		desc_id = 5;
+	else if (data->remote_data.descr_id == 10)
+		desc_id =6;
+	else if (data->remote_data.descr_id == 10)
+		desc_id =6;
+	else if (data->remote_data.descr_id == 11)
+		desc_id =7;
+	else if (data->remote_data.descr_id == 13)
+		desc_id =8;
+	else if (data->remote_data.descr_id == 50)
+		desc_id =9;
+	else
+		desc_id = data->remote_data.descr_id;
+	
 	CLRSTR(tmp);
-	snprintf(tmp, TMP_SIZE, "%s                ", weather_descr[data->remote_data.descr_id]);
+	snprintf(tmp, TMP_SIZE, "%s                ", weather_descr[desc_id]);
 	GUI_DispStringAt(tmp, X_GAP2 , 200);
 	
 	// Power
