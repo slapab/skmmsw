@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<RepositoryCustomSettings xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <LastUsedView>Log</LastUsedView>
+  <AutoRefresh>true</AutoRefresh>
+  <DraftCommitMsg />
+  <LogBranchFilterIndex>1</LogBranchFilterIndex>
+  <SidebarExpandedItems>
+    <string>File Status</string>
+    <string>Branches</string>
+    <string>Remotes</string>
+    <string>Remotes/origin</string>
+    <string>Remotes/origin/lcd_code</string>
+  </SidebarExpandedItems>
+  <SidebarWidth>140</SidebarWidth>
+  <AutoRefreshRemotes>true</AutoRefreshRemotes>
+  <LastCheckedRemotes>2015-04-03T12:06:36.7013159+02:00</LastCheckedRemotes>
+  <RemoteProjectLinks>
+    <RepositoryRemoteProjectLink>
+      <Type>GitHub</Type>
+      <BaseUrl>https://github.com</BaseUrl>
+      <RemoteName>origin</RemoteName>
+      <Username>tstrzeba</Username>
+      <Identifier>slapab/skmmsw</Identifier>
+    </RepositoryRemoteProjectLink>
+  </RemoteProjectLinks>
+  <SubtreeLinks />
+  <IncomingSavedCount>0</IncomingSavedCount>
+  <OutgoingSavedCount>0</OutgoingSavedCount>
+</RepositoryCustomSettings>

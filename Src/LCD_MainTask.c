@@ -87,7 +87,7 @@ void LCD_MainTask(const BL_Data_TypeDef* const data) {
 		desc_id = data->remote_data.descr_id;
 	
 	CLRSTR(tmp);
-	snprintf(tmp, TMP_SIZE, "%s                ", weather_descr[desc_id]);
+	snprintf(tmp, TMP_SIZE, "%s                ", weather_descr[data->remote_data.descr_id]);
 	GUI_DispStringAt(tmp, X_GAP2 , 200);
 	
 	// Power
