@@ -14,6 +14,11 @@ extern const char weather_descr[9][19];
 
 uint8_t desc_id = 0;
 
+
+/** 
+Function to display static text.
+This function runs only once and displays headers.
+*/
 void LCD_StaticText(void) {
 	
 	GUI_Clear();
@@ -36,6 +41,9 @@ void LCD_StaticText(void) {
 	GUI_DispStringAt("Moc:", X_GAP , 220);
 }	
 
+/**
+This function displays measures and data received from iOS.
+*/
 void LCD_MainTask(const BL_Data_TypeDef* const data) {
 	
 
