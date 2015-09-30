@@ -9,7 +9,9 @@
 
  * implements connection between MCU and the bluetooth module via UART
  * implements connection between the MPL3115A2 sensor.
- >Note: This branch was used only to develop mentioned tasks and don't contain all required sources
+
+
+ > Note: This branch was used only to develop mentioned tasks and don't contain all required sources
 
 * **lcd_code**
 
